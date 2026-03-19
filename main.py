@@ -4,7 +4,6 @@ from database import SessionLocal, engine
 import models
 
 models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
 def get_db():
@@ -22,22 +21,34 @@ def add_student(name: str, grade: int, db: Session = Depends(get_db)):
     db.refresh(student)
     return student
 
+@app.get("/students")
+def get_all_students(db: Session = Depends(get_db)):
+    students = db.query(models.Student).all()
+    return students
+
 @app.get("/students/{student_id}")
 def get_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if student is None:
+        return {"error": "Student not found!"}
     return student
+
 @app.put("/students/{student_id}")
 def update_student(student_id: int, name: str, grade: int, db: Session = Depends(get_db)):
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if student is None:
+        return {"error": "Student not found!"}
     student.name = name
     student.grade = grade
     db.commit()
     db.refresh(student)
     return student
-@app.delete("/students/{student_id}")
+
 @app.delete("/students/{student_id}")
 def delete_student(student_id: int, db: Session = Depends(get_db)):
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if student is None:
+        return {"error": "Student not found!"}
     db.delete(student)
     db.commit()
     return {"message": "Student deleted!"}
