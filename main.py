@@ -25,6 +25,14 @@ def add_student(name: str, grade: int, db: Session = Depends(get_db)):
 def get_all_students(db: Session = Depends(get_db)):
     students = db.query(models.Student).all()
     return students
+@app.get("/students/filter")
+def filter_students(grade: int = None, name: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.Student)
+    if grade is not None:
+        query = query.filter(models.Student.grade == grade)
+    if name is not None:
+        query = query.filter(models.Student.name == name)
+    return query.all()
 
 @app.get("/students/{student_id}")
 def get_student(student_id: int, db: Session = Depends(get_db)):
