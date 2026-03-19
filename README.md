@@ -67,6 +67,8 @@ http://127.0.0.1:8000/docs
 | `POST` | `/students` | Add a new student |
 | `PUT` | `/students/{id}` | Update a student |
 | `DELETE` | `/students/{id}` | Delete a student |
+| `POST` | `/students/{id}/courses` | Add a course to a student |
+| `GET` | `/students/{id}/courses` | Get all courses for a student |
 
 ---
 
