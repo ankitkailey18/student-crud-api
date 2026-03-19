@@ -20,7 +20,22 @@ def add_student(name: str, grade: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(student)
     return student
-
+@app.post("/students/{student_id}/courses")
+def add_course(student_id: int, course_name: str, db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if student is None:
+        return {"error": "No student found!"}
+    course = models.Course(course_name=course_name, student_id=student_id)
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+    return course
+@app.get("/students/{student_id}/courses")
+def get_courses(student_id: int, db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if student is None:
+        return {"error": "Student not found!"}
+    return student.courses
 @app.get("/students")
 def get_all_students(db: Session = Depends(get_db)):
     students = db.query(models.Student).all()
