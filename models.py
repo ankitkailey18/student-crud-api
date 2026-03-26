@@ -15,3 +15,9 @@ class Course(Base):
     course_name = Column(String)  # renamed from name to course_name
     student_id = Column(Integer, ForeignKey("students.id"))
     student = relationship("Student", back_populates="courses")
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True)
+    hashed_password = Column(String)
