@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.db
-.env
+create_admin.py
 .ipynb_checkpoints/
 *.ipynb
 anaconda_projects/
