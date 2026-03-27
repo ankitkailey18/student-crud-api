@@ -15,7 +15,11 @@ def get_db():
         yield db
     finally:
         db.close()
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    blacklisted = db.query(models.BlacklistedToken).filter(models.BlacklistedToken.token == token).first()
+    if blacklisted:
+        return None
     payload = verify_token(token)
     if payload is None:
         return None
@@ -56,8 +60,23 @@ def refresh(token: str, db: Session = Depends(get_db)):
     new_access_token = create_access_token(data={"sub": user.username})
     return {"access_token": new_access_token, "token_type": "bearer"}
 
+@app.get("/me")
+def get_me(user = Depends(get_current_user)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    return {"id": user.id, "username": user.username}
+
+@app.post("/logout")
+def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    blacklisted=models.BlacklistedToken(token=token)
+    db.add(blacklisted)
+    db.commit()
+    return {"message": "Logged out successfully!"}
+
 @app.post("/students")
-def add_student(name: str, grade: int, db: Session = Depends(get_db)):
+def add_student(name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
     student = models.Student(name=name, grade=grade)
     db.add(student)
     db.commit()
@@ -65,7 +84,9 @@ def add_student(name: str, grade: int, db: Session = Depends(get_db)):
     return student
 
 @app.post("/students/{student_id}/courses")
-def add_course(student_id: int, course_name: str, db: Session = Depends(get_db)):
+def add_course(student_id: int, course_name: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "No student found!"}
@@ -104,7 +125,9 @@ def get_student(student_id: int, db: Session = Depends(get_db)):
     return student
 
 @app.put("/students/{student_id}")
-def update_student(student_id: int, name: str, grade: int, db: Session = Depends(get_db)):
+def update_student(student_id: int, name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
@@ -115,7 +138,9 @@ def update_student(student_id: int, name: str, grade: int, db: Session = Depends
     return student
 
 @app.delete("/students/{student_id}")
-def delete_student(student_id: int, db: Session = Depends(get_db)):
+def delete_student(student_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
