@@ -37,7 +37,11 @@ def register(username: str, password: str, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"message": "User registered!", "username": user.username, "role": user.role}
+    student = models.Student(name=username, grade=0, user_id=user.id)
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+    return {"message": "User registered!", "username": user.username, "role": user.role, "student_id": student.id}
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -124,9 +128,12 @@ def get_courses(student_id: int, db: Session = Depends(get_db)):
     return student.courses
 
 @app.get("/students")
-def get_all_students(db: Session = Depends(get_db)):
-    students = db.query(models.Student).all()
-    return students
+def get_all_students(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    if user.role in ["admin", "teacher"]:
+        return db.query(models.Student).all()
+    return db.query(models.Student).filter(models.Student.user_id == user.id).all()
 
 @app.get("/students/filter")
 def filter_students(grade: int = None, name: str = None, db: Session = Depends(get_db)):
@@ -138,10 +145,14 @@ def filter_students(grade: int = None, name: str = None, db: Session = Depends(g
     return query.all()
 
 @app.get("/students/{student_id}")
-def get_student(student_id: int, db: Session = Depends(get_db)):
+def get_student(student_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
+    if user.role == "student" and student.user_id != user.id:
+        return {"error": "You can only view your own data!"}
     return student
 
 @app.put("/students/{student_id}")
