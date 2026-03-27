@@ -20,6 +20,7 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True)
+    role=Column(String,default="student")
     hashed_password = Column(String)
 
 class BlacklistedToken(Base):
