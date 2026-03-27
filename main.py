@@ -37,7 +37,7 @@ def register(username: str, password: str, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"message": "User registered!", "username": user.username}
+    return {"message": "User registered!", "username": user.username, "role": user.role}
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -64,19 +64,37 @@ def refresh(token: str, db: Session = Depends(get_db)):
 def get_me(user = Depends(get_current_user)):
     if user is None:
         return {"error": "Not authenticated!"}
-    return {"id": user.id, "username": user.username}
+    return {"id": user.id, "username": user.username, "role": user.role}
 
 @app.post("/logout")
 def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    blacklisted=models.BlacklistedToken(token=token)
+    blacklisted = models.BlacklistedToken(token=token)
     db.add(blacklisted)
     db.commit()
     return {"message": "Logged out successfully!"}
+@app.put("/users/{user_id}/role")
+def change_role(user_id: int, new_role: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    if user.role != "admin":
+        return {"error": "Only admins can change roles!"}
+    new_role = new_role.lower()
+    if new_role not in ["admin", "teacher", "student"]:
+        return {"error": "Role must be admin, teacher, or student!"}
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user:
+        return {"error": "User not found!"}
+    target_user.role = new_role
+    db.commit()
+    db.refresh(target_user)
+    return {"message": f"{target_user.username} is now a {new_role}!", "username": target_user.username, "role": target_user.role}
 
 @app.post("/students")
 def add_student(name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return {"error": "Not authenticated!"}
+    if user.role not in ["admin", "teacher"]:
+        return {"error": "Only admins and teachers can add students!"}
     student = models.Student(name=name, grade=grade)
     db.add(student)
     db.commit()
@@ -87,6 +105,8 @@ def add_student(name: str, grade: int, user = Depends(get_current_user), db: Ses
 def add_course(student_id: int, course_name: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return {"error": "Not authenticated!"}
+    if user.role not in ["admin", "teacher"]:
+        return {"error": "Only admins and teachers can add courses!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "No student found!"}
@@ -128,6 +148,8 @@ def get_student(student_id: int, db: Session = Depends(get_db)):
 def update_student(student_id: int, name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return {"error": "Not authenticated!"}
+    if user.role not in ["admin", "teacher"]:
+        return {"error": "Only admins and teachers can update students!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
@@ -141,6 +163,8 @@ def update_student(student_id: int, name: str, grade: int, user = Depends(get_cu
 def delete_student(student_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return {"error": "Not authenticated!"}
+    if user.role != "admin":
+        return {"error": "Only admins can delete students!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
