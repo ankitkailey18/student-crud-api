@@ -15,6 +15,13 @@ def get_db():
         yield db
     finally:
         db.close()
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    payload = verify_token(token)
+    if payload is None:
+        return None
+    username = payload.get("sub")
+    user = db.query(models.User).filter(models.User.username == username).first()
+    return user
 
 @app.post("/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
