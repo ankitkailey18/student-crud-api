@@ -76,6 +76,7 @@ def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     db.add(blacklisted)
     db.commit()
     return {"message": "Logged out successfully!"}
+
 @app.put("/users/{user_id}/role")
 def change_role(user_id: int, new_role: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
@@ -93,6 +94,22 @@ def change_role(user_id: int, new_role: str, user = Depends(get_current_user), d
     db.refresh(target_user)
     return {"message": f"{target_user.username} is now a {new_role}!", "username": target_user.username, "role": target_user.role}
 
+@app.get("/users")
+def get_all_users(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    if user.role != "admin":
+        return {"error": "Only admins can view all users!"}
+    users = db.query(models.User).all()
+    result = []
+    for u in users:
+        result.append({
+            "user_id": u.id,
+            "username": u.username,
+            "role": u.role
+        })
+    return result
+
 @app.post("/students")
 def add_student(name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
@@ -104,28 +121,6 @@ def add_student(name: str, grade: int, user = Depends(get_current_user), db: Ses
     db.commit()
     db.refresh(student)
     return student
-
-@app.post("/students/{student_id}/courses")
-def add_course(student_id: int, course_name: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user is None:
-        return {"error": "Not authenticated!"}
-    if user.role not in ["admin", "teacher"]:
-        return {"error": "Only admins and teachers can add courses!"}
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if student is None:
-        return {"error": "No student found!"}
-    course = models.Course(course_name=course_name, student_id=student_id)
-    db.add(course)
-    db.commit()
-    db.refresh(course)
-    return course
-
-@app.get("/students/{student_id}/courses")
-def get_courses(student_id: int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if student is None:
-        return {"error": "Student not found!"}
-    return student.courses
 
 @app.get("/students")
 def get_all_students(user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -182,3 +177,85 @@ def delete_student(student_id: int, user = Depends(get_current_user), db: Sessio
     db.delete(student)
     db.commit()
     return {"message": "Student deleted!"}
+
+@app.post("/courses")
+def create_course(course_name: str, teacher_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    if user.role != "admin":
+        return {"error": "Only admins can create courses!"}
+    teacher = db.query(models.User).filter(models.User.id == teacher_id).first()
+    if not teacher:
+        return {"error": "Teacher not found!"}
+    if teacher.role != "teacher":
+        return {"error": "This user is not a teacher!"}
+    course = models.Course(course_name=course_name, teacher_id=teacher_id)
+    db.add(course)
+    db.commit()
+    db.refresh(course)
+    return {"message": "Course created!", "course_name": course.course_name, "course_id": course.id, "teacher": teacher.username}
+
+@app.get("/courses")
+def get_all_courses(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    courses = db.query(models.Course).all()
+    result = []
+    for course in courses:
+        result.append({
+            "course_id": course.id,
+            "course_name": course.course_name,
+            "teacher": course.teacher.username
+        })
+    return result
+
+@app.get("/my-courses")
+def get_my_courses(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        return {"error": "Student profile not found!"}
+    enrollments = db.query(models.Enrollment).filter(models.Enrollment.student_id == student.id).all()
+    my_courses = []
+    for enrollment in enrollments:
+        my_courses.append({
+            "course_id": enrollment.course.id,
+            "course_name": enrollment.course.course_name,
+            "teacher": enrollment.course.teacher.username
+        })
+    return {"student": student.name, "courses": my_courses}
+
+@app.post("/courses/{course_id}/enroll")
+def enroll_student(course_id: int, student_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    if user.role not in ["admin", "teacher"]:
+        return {"error": "Only admins and teachers can enroll students!"}
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        return {"error": "Course not found!"}
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not student:
+        return {"error": "Student not found!"}
+    enrollment = models.Enrollment(student_id=student_id, course_id=course_id)
+    db.add(enrollment)
+    db.commit()
+    db.refresh(enrollment)
+    return {"message": f"{student.name} enrolled in {course.course_name}!"}
+
+@app.get("/courses/{course_id}/students")
+def get_course_students(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return {"error": "Not authenticated!"}
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        return {"error": "Course not found!"}
+    enrollments = db.query(models.Enrollment).filter(models.Enrollment.course_id == course_id).all()
+    classmates = []
+    for enrollment in enrollments:
+        classmates.append({
+            "student_id": enrollment.student.id,
+            "name": enrollment.student.name
+        })
+    return {"course": course.course_name, "students": classmates}
