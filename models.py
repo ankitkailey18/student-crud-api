@@ -25,6 +25,8 @@ class User(Base):
     username = Column(String, unique=True)
     role = Column(String, default="student")
     hashed_password = Column(String)
+    email=Column(String,unique=True)
+    is_verified=Column(Integer,default=0)
     student_profile = relationship("Student", back_populates="user")
     courses_teaching = relationship("Course", back_populates="teacher")
 
