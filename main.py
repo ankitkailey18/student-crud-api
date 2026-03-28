@@ -4,9 +4,18 @@ from database import SessionLocal, engine
 import models
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from auth import hash_password, verify_password, create_access_token, create_refresh_token, verify_token
+from sqlalchemy import asc, desc
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def get_db():
@@ -32,6 +41,10 @@ def register(username: str, password: str, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.username == username).first()
     if existing_user:
         return {"error": "Username already taken!"}
+    if len(password) < 8:
+        return {"error": "Password must be at least 8 characters!"}
+    if not any(char.isdigit() for char in password):
+        return {"error": "Password must contain at least one number!"}
     hashed = hash_password(password)
     user = models.User(username=username, hashed_password=hashed)
     db.add(user)
@@ -116,6 +129,10 @@ def add_student(name: str, grade: int, user = Depends(get_current_user), db: Ses
         return {"error": "Not authenticated!"}
     if user.role not in ["admin", "teacher"]:
         return {"error": "Only admins and teachers can add students!"}
+    if name.strip() == "":
+        return {"error": "Name cannot be empty!"}
+    if grade < 0 or grade > 100:
+        return {"error": "Grade must be between 0 and 100!"}
     student = models.Student(name=name, grade=grade)
     db.add(student)
     db.commit()
@@ -123,21 +140,31 @@ def add_student(name: str, grade: int, user = Depends(get_current_user), db: Ses
     return student
 
 @app.get("/students")
-def get_all_students(user = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_all_students(page: int = 1, limit: int = 10, search: str = None, sort: str = None, order: str = "asc", user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user is None:
         return {"error": "Not authenticated!"}
+    skip = (page - 1) * limit
     if user.role in ["admin", "teacher"]:
-        return db.query(models.Student).all()
-    return db.query(models.Student).filter(models.Student.user_id == user.id).all()
+        query = db.query(models.Student)
+    else:
+        query = db.query(models.Student).filter(models.Student.user_id == user.id)
+    if search is not None:
+        query = query.filter(models.Student.name.contains(search))
+    if sort is not None:
+        sort = sort.lower()
+        order = order.lower()
+        if sort == "grade":
+            sort_column = models.Student.grade
+        elif sort == "name":
+            sort_column = models.Student.name
+        else:
+            sort_column = models.Student.id
+        if order == "desc":
+            query = query.order_by(desc(sort_column))
+        else:
+            query = query.order_by(asc(sort_column))
+    return query.offset(skip).limit(limit).all()
 
-@app.get("/students/filter")
-def filter_students(grade: int = None, name: str = None, db: Session = Depends(get_db)):
-    query = db.query(models.Student)
-    if grade is not None:
-        query = query.filter(models.Student.grade == grade)
-    if name is not None:
-        query = query.filter(models.Student.name == name)
-    return query.all()
 
 @app.get("/students/{student_id}")
 def get_student(student_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -156,6 +183,10 @@ def update_student(student_id: int, name: str, grade: int, user = Depends(get_cu
         return {"error": "Not authenticated!"}
     if user.role not in ["admin", "teacher"]:
         return {"error": "Only admins and teachers can update students!"}
+    if not name or name.strip() == "":
+        return {"error": "Name cannot be empty!"}
+    if grade < 0 or grade > 100:
+        return {"error": "Grade must be between 0 and 100!"}
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if student is None:
         return {"error": "Student not found!"}
