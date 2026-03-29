@@ -3,12 +3,33 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 import models
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from auth import hash_password, verify_password, create_access_token, create_refresh_token, verify_token,  create_verification_token
+from auth import hash_password, verify_password, create_access_token, create_refresh_token, verify_token, create_verification_token
 from sqlalchemy import asc, desc
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
+from starlette.requests import Request
+import logging
+
+logging.basicConfig(
+    filename="app.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request, exc):
+    logger.warning(f"Rate limit exceeded from IP: {request.client.host}")
+    return JSONResponse(status_code=429, content={"detail": "Too many requests! Try again later."})
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,7 +60,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 @app.post("/register")
-def register(username: str, password: str,email:str, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.username == username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken!")
@@ -60,6 +82,7 @@ def register(username: str, password: str,email:str, db: Session = Depends(get_d
     db.commit()
     db.refresh(student)
     verification_token = create_verification_token(data={"sub": username})
+    logger.info(f"New user registered: {username}")
     return {"message": "User registered! Please verify your email.", "username": user.username, "verification_token": verification_token}
 
 @app.post("/verify")
@@ -73,18 +96,49 @@ def verify_email(token: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found!")
     user.is_verified = 1
     db.commit()
+    logger.info(f"User verified: {username}")
     return {"message": f"{username} is now verified!"}
 
+@app.post("/forgot-password")
+@limiter.limit("3/minute")
+def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No user associated with this email!")
+    reset_token = create_verification_token(data={"sub": user.username})
+    logger.info(f"Password reset requested for: {user.username}")
+    return {"message": "Password reset token generated!", "reset_token": reset_token}
+
+@app.post("/reset-password")
+def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
+    payload = verify_token(token)
+    if payload is None:
+        raise HTTPException(status_code=400, detail="Invalid or expired token!")
+    username = payload.get("sub")
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found!")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters!")
+    if not any(char.isdigit() for char in new_password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one number!")
+    user.hashed_password = hash_password(new_password)
+    db.commit()
+    logger.info(f"Password reset successful for: {username}")
+    return {"message": "Password reset successful!"}
 
 @app.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
+        logger.warning(f"Failed login attempt for: {form_data.username}")
         raise HTTPException(status_code=401, detail="Invalid username or password!")
     if user.is_verified == 0:
         raise HTTPException(status_code=403, detail="Please verify your email first!")
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
+    logger.info(f"User logged in: {user.username}")
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @app.post("/refresh")
@@ -108,6 +162,7 @@ def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     blacklisted = models.BlacklistedToken(token=token)
     db.add(blacklisted)
     db.commit()
+    logger.info("User logged out")
     return {"message": "Logged out successfully!"}
 
 @app.put("/users/{user_id}/role")
@@ -123,6 +178,7 @@ def change_role(user_id: int, new_role: str, user = Depends(get_current_user), d
     target_user.role = new_role
     db.commit()
     db.refresh(target_user)
+    logger.info(f"Admin {user.username} changed {target_user.username}'s role to {new_role}")
     return {"message": f"{target_user.username} is now a {new_role}!", "username": target_user.username, "role": target_user.role}
 
 @app.get("/users")
@@ -154,6 +210,7 @@ def add_student(name: str, grade: int, user = Depends(get_current_user), db: Ses
     db.add(student)
     db.commit()
     db.refresh(student)
+    logger.info(f"{user.username} added student: {name}")
     return student
 
 @app.get("/students")
@@ -204,6 +261,7 @@ def update_student(student_id: int, name: str, grade: int, user = Depends(get_cu
     student.grade = grade
     db.commit()
     db.refresh(student)
+    logger.info(f"{user.username} updated student {student_id}: name={name}, grade={grade}")
     return student
 
 @app.delete("/students/{student_id}")
@@ -215,6 +273,7 @@ def delete_student(student_id: int, user = Depends(get_current_user), db: Sessio
         raise HTTPException(status_code=404, detail="Student not found!")
     db.delete(student)
     db.commit()
+    logger.info(f"Admin {user.username} deleted student {student_id}")
     return {"message": "Student deleted!"}
 
 @app.post("/courses")
@@ -230,6 +289,7 @@ def create_course(course_name: str, teacher_id: int, user = Depends(get_current_
     db.add(course)
     db.commit()
     db.refresh(course)
+    logger.info(f"Admin {user.username} created course: {course_name}, teacher: {teacher.username}")
     return {"message": "Course created!", "course_name": course.course_name, "course_id": course.id, "teacher": teacher.username}
 
 @app.get("/courses")
@@ -273,6 +333,7 @@ def enroll_student(course_id: int, student_id: int, user = Depends(get_current_u
     db.add(enrollment)
     db.commit()
     db.refresh(enrollment)
+    logger.info(f"{user.username} enrolled {student.name} in {course.course_name}")
     return {"message": f"{student.name} enrolled in {course.course_name}!"}
 
 @app.get("/courses/{course_id}/students")

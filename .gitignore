@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
+app.log
 *.db
 create_admin.py
 .ipynb_checkpoints/
