@@ -1,0 +1,84 @@
+  :root {
+    --bg:        #f5f3ef;
+    --surface:   #ffffff;
+    --border:    #e8e3da;
+    --border2:   #d4cec2;
+    --text:      #1a1916;
+    --muted:     #7a7670;
+    --accent:    #2d6a4f;
+    --accent-bg: #eaf3ed;
+    --accent2:   #e76f2a;
+    --danger:    #c0392b;
+    --danger-bg: #fdf0ee;
+    --warn:      #b45309;
+    --warn-bg:   #fef3e0;
+    --info:      #1d5fa8;
+    --info-bg:   #edf4fc;
+    --sidebar-w: 220px;
+    --radius:    10px;
+    --shadow:    0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  #auth-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    background-image: radial-gradient(circle at 20% 80%, #d4e8db 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, #fde8d4 0%, transparent 50%);
+  }
+  .auth-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    box-shadow: var(--shadow); padding: 48px 44px; width: 420px; max-width: 95vw;
+  }
+  .auth-brand { margin-bottom: 32px; }
+  .auth-brand h1 { font-family: 'Instrument Serif', serif; font-size: 28px; font-weight: 400; color: var(--text); }
+  .auth-brand p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+  .tabs button {
+    flex: 1; background: none; border: none; padding: 10px; font-family: inherit;
+    font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s;
+  }
+  .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
+  .form-group input {
+    width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--text);
+    outline: none; transition: border .15s, box-shadow .15s;
+  }
+  .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,.12); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 18px; border-radius: var(--radius); border: 1px solid var(--border);
+    font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: all .15s; text-decoration: none; white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #245f42; }
+  .btn-secondary { background: var(--surface); color: var(--text); }
+  .btn-secondary:hover { background: var(--bg); }
+  .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: #f0c4be; }
+  .btn-danger:hover { background: #fbe0db; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-full { width: 100%; }
+  .auth-note { font-size: 12px; color: var(--muted); margin-top: 12px; text-align: center; line-height: 1.6; }
+  .alert {
+    padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px;
+    border: 1px solid;
+  }
+  .alert-error { background: var(--danger-bg); color: var(--danger); border-color: #f0c4be; }
+  .alert-success { background: var(--accent-bg); color: var(--accent); border-color: #b8d9c5; }
+  .alert-info { background: var(--info-bg); color: var(--info); border-color: #b9d6f2; }
+  .verify-box { display: none; }
+
+  .hidden { display: none !important; }
+  .flex { display: flex; }
+  .gap-2 { gap: 8px; }
+  .mt-4 { margin-top: 16px; }
+  .mt-6 { margin-top: 24px; }
+  .text-muted { color: var(--muted); }
+  .text-sm { font-size: 13px; }
+  .text-right { text-align: right; }
+  .actions { display: flex; gap: 6px; }

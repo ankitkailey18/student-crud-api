@@ -9,3 +9,4 @@ create_admin.py
 *.ipynb
 anaconda_projects/
 .vscode/
+test.txt

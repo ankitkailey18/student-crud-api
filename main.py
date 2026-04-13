@@ -1,3 +1,4 @@
+from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
@@ -58,6 +59,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if not user:
         raise HTTPException(status_code=401, detail="User not found!")
     return user
+
+@app.get("/", response_class=HTMLResponse)
+def serve_home():
+    with open("index.html", "r", encoding="utf-8") as f:
+        return f.read()
 
 @app.post("/register")
 @limiter.limit("5/minute")
