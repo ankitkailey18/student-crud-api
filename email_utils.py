@@ -13,10 +13,10 @@ async def send_email(to_email:str, subject:str, body:str):
         await aiosmtplib.send(
             msg,
             hostname=os.getenv('SMTP_HOST'),
-            port=int(os.getenv('SMTP_PORT')),
+            port=465,
             username=os.getenv('SMTP_USER'),
             password=os.getenv('SMTP_PASSWORD'),
-            start_tls=True
+            use_tls=True
         )
         print(f"Email sent to {to_email}")
     except Exception as e:
