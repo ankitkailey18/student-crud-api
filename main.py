@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 import logging
+from email_utils import send_email
 
 logging.basicConfig(
     filename="app.log",
@@ -67,7 +68,7 @@ def serve_home():
 
 @app.post("/register")
 @limiter.limit("5/minute")
-def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
+async def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.username == username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken!")
@@ -88,10 +89,14 @@ def register(request: Request, username: str, password: str, email: str, db: Ses
     db.commit()
     db.refresh(student)
     verification_token = create_verification_token(data={"sub": username})
+    await send_email(
+    to_email=email,
+    subject="Verify your EduManager account",
+    body=f"Click this link to verify your account: http://localhost:8000/verify?token={verification_token}")
     logger.info(f"New user registered: {username}")
-    return {"message": "User registered! Please verify your email.", "username": user.username, "verification_token": verification_token}
+    return {"message": "User registered! Verification email sent.", "username": user.username}
 
-@app.post("/verify")
+@app.get("/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
     payload = verify_token(token)
     if payload is None:
@@ -107,13 +112,17 @@ def verify_email(token: str, db: Session = Depends(get_db)):
 
 @app.post("/forgot-password")
 @limiter.limit("3/minute")
-def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+async def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No user associated with this email!")
     reset_token = create_verification_token(data={"sub": user.username})
+    await send_email(
+    to_email=email,
+    subject="Reset your EduManager password",
+    body=f"Click this link to reset your password: http://localhost:8000/reset-password?token={reset_token}")
     logger.info(f"Password reset requested for: {user.username}")
-    return {"message": "Password reset token generated!", "reset_token": reset_token}
+    return {"message": "Password reset email sent!"}
 
 @app.post("/reset-password")
 def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
