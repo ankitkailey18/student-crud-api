@@ -1,4 +1,3 @@
-from envs.booksenv.Lib import email
 from fastapi.responses import HTMLResponse
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -15,8 +14,8 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 import logging
 from email_utils import send_email
-import re 
-import os 
+import re
+import os
 
 
 logging.basicConfig(
@@ -85,6 +84,7 @@ async def register(request: Request, username: str, password: str, email: str, d
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters!")
     if not any(char.isdigit() for char in password):
         raise HTTPException(status_code=400, detail="Password must contain at least one number!")
+    email = email.strip()
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format!")
     hashed = hash_password(password)
@@ -101,9 +101,9 @@ async def register(request: Request, username: str, password: str, email: str, d
     db.refresh(student)
     verification_token = create_verification_token(data={"sub": username})
     await send_email(
-    to_email=email,
-    subject="Verify your EduManager account",
-    body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n{os.getenv('FRONTEND_URL')}/verify?token={verification_token}\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
+        to_email=email,
+        subject="Verify your EduManager account",
+        body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n<a href='{os.getenv('FRONTEND_URL')}/verify?token={verification_token}'>Click here to verify</a>\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"New user registered: {username}")
     return {"message": "User registered! Verification email sent.", "username": user.username}
 
@@ -124,14 +124,16 @@ def verify_email(token: str, db: Session = Depends(get_db)):
 @app.post("/forgot-password")
 @limiter.limit("3/minute")
 async def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+    email = email.strip()
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No user associated with this email!")
     reset_token = create_verification_token(data={"sub": user.username})
     await send_email(
-    to_email=email,
-    subject="Reset your EduManager password",
-    body=f"Hi {user.username},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}\n\nThis link will expire in 24 hours.\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe EduManager Team")
+        to_email=email,
+        subject="Reset your EduManager password",
+        body=f"Hi {user.username},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n<a href='{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}'>Click here to reset your password</a>\n\nThis link will expire in 24 hours.\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe EduManager Team")
+    logger.info(f"Password reset requested for: {user.username}")
     return {"message": "Password reset email sent!"}
 
 @app.post("/reset-password")
