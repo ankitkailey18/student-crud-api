@@ -1,29 +1,29 @@
-import aiosmtplib
-from email.message import EmailMessage
+import httpx
 import os
 from dotenv import load_dotenv
-import asyncio
 
 load_dotenv()
 
-async def send_email(to_email:str, subject:str, body:str):
-    msg = EmailMessage()
-    msg['From'] = os.getenv('SMTP_USER')
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.set_content(body)
+async def send_email(to_email: str, subject: str, body: str):
     try:
-        await asyncio.wait_for(
-            aiosmtplib.send(
-                msg,
-                hostname=os.getenv('SMTP_HOST'),
-                port=465,
-                username=os.getenv('SMTP_USER'),
-                password=os.getenv('SMTP_PASSWORD'),
-                use_tls=True
-            ),
-            timeout=10
-        )
-        print(f"Email sent to {to_email}")
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": "EduManager <noreply@edumanager.me>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": body.replace('\n', '<br>')
+                },
+                timeout=10
+            )
+            if response.status_code == 200:
+                print(f"Email sent to {to_email}")
+            else:
+                print(f"Failed to send email: {response.text}")
     except Exception as e:
         print(f"Failed to send email: {e}")
