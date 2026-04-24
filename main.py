@@ -108,7 +108,9 @@ async def register(request: Request, username: str, password: str, email: str, d
         body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n<a href='{os.getenv('FRONTEND_URL')}/verify?token={verification_token}'>Click here to verify</a>\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"New user registered: {username}")
     return {"message": "User registered! Verification email sent.", "username": user.username}
+    return {"message": "User registered! Verification email sent.", "username": user.username}
 
+@app.get("/verify")
 @app.get("/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
     payload = verify_token(token)
@@ -136,6 +138,7 @@ async def forgot_password(request: Request, email: str, db: Session = Depends(ge
         subject="Reset your EduManager password",
         body=f"Hi {user.username},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n<a href='{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}'>Click here to reset your password</a>\n\nThis link will expire in 24 hours.\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"Password reset requested for: {user.username}")
+    return {"message": "Password reset email sent!"}
     return {"message": "Password reset email sent!"}
 
 @app.post("/reset-password")
