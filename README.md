@@ -4,11 +4,12 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
-![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)
 
-A production-ready **RESTful API** built with **FastAPI** and **PostgreSQL** featuring **JWT authentication**, **role-based access control**, **email verification**, **course enrollment system**, and full CRUD operations.
+A production-ready **RESTful API** built with **FastAPI** and **PostgreSQL** featuring **JWT authentication**, **role-based access control**, **real email verification via Resend**, **course enrollment system**, and full CRUD operations.
 
-🔗 **Live API:** [https://student-crud-api-lhju.onrender.com/docs](https://student-crud-api-lhju.onrender.com/docs)
+🔗 **Live API:** [student-crud-api-production-e886.up.railway.app/docs](https://student-crud-api-production-e886.up.railway.app/docs)
+📧 **Email Domain:** `noreply@edumanager.me`
 
 ---
 
@@ -17,19 +18,19 @@ A production-ready **RESTful API** built with **FastAPI** and **PostgreSQL** fea
 - ✅ Full CRUD — Create, Read, Update, Delete students and courses
 - ✅ JWT Authentication — Access tokens (30 min) + Refresh tokens (7 days)
 - ✅ Role-Based Access Control — Admin, Teacher, and Student permissions
-- ✅ Email Verification — Users must verify email before logging in
-- ✅ Password Reset — Forgot password flow with secure reset tokens
+- ✅ Real Email Verification — Verification emails sent via Resend from `noreply@edumanager.me`
+- ✅ Password Reset — Forgot password flow with secure reset tokens emailed to users
 - ✅ Course Enrollment System — Many-to-many student-course relationships
 - ✅ Classmates Feature — Students can see who's in their courses
 - ✅ Token Blacklisting — Logout immediately kills the token
 - ✅ Password Hashing — Bcrypt for secure password storage
 - ✅ Rate Limiting — Prevents brute force attacks on login/register
 - ✅ Pagination, Search & Sorting — Efficient data retrieval
-- ✅ Input Validation — Name, grade, and password requirements
+- ✅ Input Validation — Name, grade, email format, and password requirements
 - ✅ Logging — All actions tracked in app.log
 - ✅ CORS — Frontend-ready with cross-origin support
 - ✅ Proper HTTP Error Codes — 400, 401, 403, 404, 429
-- ✅ Deployed on Render with PostgreSQL
+- ✅ Deployed on Railway with PostgreSQL
 
 ---
 
@@ -43,10 +44,23 @@ A production-ready **RESTful API** built with **FastAPI** and **PostgreSQL** fea
 | SQLite | Local development database |
 | JWT (python-jose) | Authentication tokens |
 | Passlib + Bcrypt | Password hashing |
+| Resend + httpx | Transactional email delivery |
 | SlowAPI | Rate limiting |
 | Uvicorn | ASGI server |
 | python-dotenv | Environment variable management |
-| Render | Cloud deployment |
+| Railway | Cloud deployment |
+| Namecheap | Custom domain (`edumanager.me`) |
+
+---
+
+## 📧 Email Integration
+
+This API sends **real transactional emails** using [Resend](https://resend.com) with a custom domain:
+
+- **Verification emails** — Sent on registration from `noreply@edumanager.me`
+- **Password reset emails** — Sent when users request a password reset
+- **Custom domain** — `edumanager.me` with DKIM, SPF, and DMARC configured
+- **HTTP API** — Uses Resend's REST API via `httpx` (no SMTP ports needed, works on free-tier hosts)
 
 ---
 
@@ -77,6 +91,8 @@ pip install -r requirements.txt
 ```
 SECRET_KEY=your-secret-key-here
 DATABASE_URL=sqlite:///./students.db
+RESEND_API_KEY=your-resend-api-key
+FRONTEND_URL=http://localhost:8000
 ```
 
 ### 4. Run the server
@@ -101,9 +117,9 @@ http://127.0.0.1:8000/docs
 ### Authentication
 | Method | Route | Description | Access |
 |--------|-------|-------------|--------|
-| `POST` | `/register` | Create account + email verification token | Public |
-| `POST` | `/verify` | Verify email with token | Public |
-| `POST` | `/forgot-password` | Get password reset token | Public |
+| `POST` | `/register` | Create account + sends verification email | Public |
+| `GET` | `/verify` | Verify email via token link | Public |
+| `POST` | `/forgot-password` | Sends password reset email | Public |
 | `POST` | `/reset-password` | Reset password with token | Public |
 | `POST` | `/login` | Login and get access + refresh tokens | Public |
 | `POST` | `/refresh` | Get new access token | Public |
@@ -139,15 +155,17 @@ http://127.0.0.1:8000/docs
 ## 🔑 Authentication Flow
 
 ```
-Register → Get verification token → Verify email
-                                        ↓
-                              Login → Access Token (30 min) + Refresh Token (7 days)
-                                        ↓
-                              Use Access Token for all requests
-                                        ↓
-                              Token expires → Use Refresh Token
-                                        ↓
-                              Logout → Token blacklisted immediately
+Register → Verification email sent to user
+                    ↓
+         User clicks link in email → Email verified
+                    ↓
+         Login → Access Token (30 min) + Refresh Token (7 days)
+                    ↓
+         Use Access Token for all requests
+                    ↓
+         Token expires → Use Refresh Token
+                    ↓
+         Logout → Token blacklisted immediately
 ```
 
 ---
@@ -170,40 +188,13 @@ GET /users?role=teacher                → Filter users by role
 - **Bcrypt Hashing** — Passwords never stored in plain text
 - **Token Blacklisting** — Logout invalidates tokens immediately
 - **Rate Limiting** — 5 req/min on login/register, 3 req/min on forgot-password
-- **Email Verification** — Users must verify before accessing the system
+- **Real Email Verification** — Transactional emails via Resend with custom domain
+- **DNS Authentication** — DKIM, SPF, and DMARC configured for email deliverability
 - **Role-Based Access** — Students can only see their own data
-- **Environment Variables** — SECRET_KEY and DATABASE_URL never in code
-- **Input Validation** — Grade (0-100), non-empty names, password (8+ chars with number)
+- **Environment Variables** — All secrets stored as env vars, never in code
+- **Input Validation** — Grade (0-100), non-empty names, email format, password (8+ chars with number)
 - **CORS** — Configurable cross-origin access
 - **HTTP Error Codes** — Proper 400, 401, 403, 404, 429 responses
-
----
-
-## 📝 Request Examples
-
-### Register
-```
-POST /register?username=john&password=secure123&email=john@email.com
-→ {"message": "User registered! Please verify your email.", "verification_token": "eyJ..."}
-```
-
-### Login
-```
-POST /login
-→ {"access_token": "eyJ...", "refresh_token": "eyJ...", "token_type": "bearer"}
-```
-
-### Add a Student (requires token)
-```
-POST /students?name=John&grade=92
-→ {"name": "John", "grade": 92, "id": 1, "user_id": null}
-```
-
-### Enroll in Course
-```
-POST /courses/1/enroll?student_id=1
-→ {"message": "John enrolled in Data Structures!"}
-```
 
 ---
 

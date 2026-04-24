@@ -13,6 +13,10 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 import logging
+from email_utils import send_email
+import re
+import os
+
 
 logging.basicConfig(
     filename="app.log",
@@ -25,6 +29,11 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
+
+
+def is_valid_email(email: str) -> bool:
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
 
 @app.exception_handler(RateLimitExceeded)
 def rate_limit_handler(request, exc):
@@ -67,7 +76,7 @@ def serve_home():
 
 @app.post("/register")
 @limiter.limit("5/minute")
-def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
+async def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.username == username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken!")
@@ -75,6 +84,9 @@ def register(request: Request, username: str, password: str, email: str, db: Ses
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters!")
     if not any(char.isdigit() for char in password):
         raise HTTPException(status_code=400, detail="Password must contain at least one number!")
+    email = email.strip()
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format!")
     hashed = hash_password(password)
     exist = db.query(models.User).filter(models.User.email == email).first()
     if exist:
@@ -88,10 +100,14 @@ def register(request: Request, username: str, password: str, email: str, db: Ses
     db.commit()
     db.refresh(student)
     verification_token = create_verification_token(data={"sub": username})
+    await send_email(
+        to_email=email,
+        subject="Verify your EduManager account",
+        body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n<a href='{os.getenv('FRONTEND_URL')}/verify?token={verification_token}'>Click here to verify</a>\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"New user registered: {username}")
-    return {"message": "User registered! Please verify your email.", "username": user.username, "verification_token": verification_token}
+    return {"message": "User registered! Verification email sent.", "username": user.username}
 
-@app.post("/verify")
+@app.get("/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
     payload = verify_token(token)
     if payload is None:
@@ -107,13 +123,18 @@ def verify_email(token: str, db: Session = Depends(get_db)):
 
 @app.post("/forgot-password")
 @limiter.limit("3/minute")
-def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+async def forgot_password(request: Request, email: str, db: Session = Depends(get_db)):
+    email = email.strip()
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No user associated with this email!")
     reset_token = create_verification_token(data={"sub": user.username})
+    await send_email(
+        to_email=email,
+        subject="Reset your EduManager password",
+        body=f"Hi {user.username},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n<a href='{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}'>Click here to reset your password</a>\n\nThis link will expire in 24 hours.\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"Password reset requested for: {user.username}")
-    return {"message": "Password reset token generated!", "reset_token": reset_token}
+    return {"message": "Password reset email sent!"}
 
 @app.post("/reset-password")
 def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
