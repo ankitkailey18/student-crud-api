@@ -8,7 +8,7 @@
 
 A production-ready **RESTful API** built with **FastAPI** and **PostgreSQL** featuring **JWT authentication**, **role-based access control**, **real email verification via Resend**, **course enrollment system**, and full CRUD operations.
 
-🔗 **Live API:** [student-crud-api-production-e886.up.railway.app/docs](https://student-crud-api-production-e886.up.railway.app/docs)
+🔗 **Live API:** [student-crud-api-production-9c58.up.railway.app](https://student-crud-api-production-9c58.up.railway.app/docs)
 📧 **Email Domain:** `noreply@edumanager.me`
 
 ---
