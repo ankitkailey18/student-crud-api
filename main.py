@@ -1,4 +1,5 @@
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 
