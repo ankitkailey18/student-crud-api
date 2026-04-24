@@ -49,15 +49,11 @@
       </div>
       <button class="btn btn-primary btn-full" onclick="doRegister()">Create account</button>
 
-      <div class="verify-box" id="verify-box">
-        <div class="alert alert-info" style="margin-top:16px">
-          Check your email for the verification token, then paste it below.
+      <div class="verify-box" id="verify-box" style="display:none; margin-top:16px;">
+        <div class="alert alert-info">
+          <strong>Check your email!</strong><br>
+          We've sent a verification link to your inbox. Click it to activate your account.
         </div>
-        <div class="form-group" style="margin-top:8px">
-          <label>Verification token</label>
-          <input type="text" id="verify-token" placeholder="Paste token here"/>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="doVerify()">Verify email</button>
       </div>
     </div>
   </div>
@@ -431,11 +427,14 @@ async function doRegister() {
   const p = document.getElementById('reg-password').value;
   if (!u || !em || !p) return authAlert('Please fill in all fields.');
   try {
-    const data = await api(`/register?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&email=${encodeURIComponent(em)}`, { method: 'POST' });
+    await api(`/register?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&email=${encodeURIComponent(em)}`, { method: 'POST' });
     document.getElementById('verify-box').style.display = 'block';
-    // auto-fill token for demo
-    if (data.verification_token) document.getElementById('verify-token').value = data.verification_token;
-    authAlert('Account created! Verify your email to continue.', 'success');
+    document.getElementById('reg-username').parentElement.style.display = 'none';
+    document.getElementById('reg-email').parentElement.style.display = 'none';
+    document.getElementById('reg-password').parentElement.style.display = 'none';
+    document.querySelector('#tab-register .btn-primary').style.display = 'none';
+    
+    authAlert('Account created!', 'success');
   } catch (e) { authAlert(e.message); }
 }
 
@@ -837,6 +836,21 @@ function gradeBadge(g) {
 
 // ── BOOT ──────────────────────────────────────────────────────────
 (async function boot() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+    try {
+      await api(`/verify?token=${encodeURIComponent(token)}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      switchTab('login');
+      authAlert('Email verified successfully! You can now sign in.', 'success');
+    } catch (e) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      switchTab('login');
+      authAlert('Verification failed or link expired.', 'error');
+    }
+  }
   if (state.accessToken) {
     document.getElementById('auth-screen').style.display = 'none';
     await initApp();
