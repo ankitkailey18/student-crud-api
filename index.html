@@ -29,9 +29,26 @@
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <div style="position:relative;">
+          <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:40px;width:100%;"/>
+          <span onclick="togglePw('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#888" stroke="none"><path d="M12 4C5 4 1 12 1 12s4 8 11 8 11-8 11-8-4-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></span>
+        </div>
       </div>
-      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
+      <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">Sign in</button>
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" onclick="showForgotPassword();return false;" style="color:#888;font-size:13px;text-decoration:none;">Forgot your password?</a>
+      </div>
+    </div>
+
+    <div id="tab-forgot" class="hidden">
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" id="forgot-email" placeholder="Enter your registered email"/>
+      </div>
+      <button class="btn btn-primary btn-full" id="forgot-btn" onclick="doForgotPassword()">Send reset link</button>
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" onclick="switchTab('login');return false;" style="color:#888;font-size:13px;text-decoration:none;">← Back to sign in</a>
+      </div>
     </div>
 
     <div id="tab-register" class="hidden">
@@ -45,7 +62,17 @@
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="reg-password" placeholder="8+ chars, include a number"/>
+        <div style="position:relative;">
+          <input type="password" id="reg-password" placeholder="8+ chars, include a number" style="padding-right:40px;width:100%;"/>
+          <span onclick="togglePw('reg-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#888" stroke="none"><path d="M12 4C5 4 1 12 1 12s4 8 11 8 11-8 11-8-4-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></span>
+        </div>
+      </div>
+      <div class="form-group" id="confirm-pw-group">
+        <label>Confirm Password</label>
+        <div style="position:relative;">
+          <input type="password" id="reg-confirm-password" placeholder="Re-enter password" style="padding-right:40px;width:100%;"/>
+          <span onclick="togglePw('reg-confirm-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#888" stroke="none"><path d="M12 4C5 4 1 12 1 12s4 8 11 8 11-8 11-8-4-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></span>
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="doRegister()">Create account</button>
 
@@ -66,14 +93,14 @@
       <span id="sb-inst">Student Management</span>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section">
+      <div class="nav-section admin-teacher-only">
         <div class="nav-label">Overview</div>
         <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Dashboard
         </div>
       </div>
-      <div class="nav-section">
+      <div class="nav-section admin-teacher-only">
         <div class="nav-label">Students</div>
         <div class="nav-item" data-page="students" onclick="navigate('students')">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
@@ -126,11 +153,11 @@
 
     <div class="page" id="page-dashboard">
       <div class="page-header">
-        <h1>Dashboard</h1>
-        <p>Welcome back — here's what's happening.</p>
+        <h1 id="dash-welcome">Dashboard</h1>
+        <p id="dash-sub">Welcome back — here's what's happening.</p>
       </div>
       <div class="stat-grid" id="dash-stats">
-        <div class="stat-card"><div class="stat-label">Total students</div><div class="stat-value" id="stat-students">—</div><div class="stat-sub">registered</div></div>
+        <div class="stat-card admin-teacher-only"><div class="stat-label">Total students</div><div class="stat-value" id="stat-students">—</div><div class="stat-sub">registered</div></div>
         <div class="stat-card"><div class="stat-label">Total courses</div><div class="stat-value" id="stat-courses">—</div><div class="stat-sub">available</div></div>
         <div class="stat-card"><div class="stat-label">My courses</div><div class="stat-value" id="stat-my-courses">—</div><div class="stat-sub">enrolled</div></div>
         <div class="stat-card admin-only"><div class="stat-label">Total users</div><div class="stat-value" id="stat-users">—</div><div class="stat-sub">registered</div></div>
@@ -249,7 +276,7 @@
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Change role</th></tr></thead>
+            <thead><tr><th>#</th><th>Username</th><th>Current role</th><th>Update role</th></tr></thead>
             <tbody id="users-body"></tbody>
           </table>
         </div>
@@ -261,21 +288,13 @@
         <h1>Profile</h1>
         <p>Your account information.</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:700px">
+      <div style="max-width:400px">
         <div class="card">
           <div class="card-body">
             <div class="profile-avatar" id="profile-avatar">?</div>
             <div class="info-row"><span class="label">Username</span><span id="profile-username">—</span></div>
-            <div class="info-row"><span class="label">User ID</span><span id="profile-id">—</span></div>
             <div class="info-row"><span class="label">Role</span><span id="profile-role">—</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="section-title">Token info</div>
-            <div class="info-row"><span class="label">Access token</span><span class="badge badge-success">Active</span></div>
-            <div class="info-row"><span class="label">Refresh token</span><span class="badge badge-info">7 days</span></div>
-            <div class="info-row"><span class="label">Token type</span><span class="text-muted text-sm">Bearer</span></div>
+            <div class="info-row"><span class="label">Status</span><span class="badge badge-success">Active</span></div>
             <button class="btn btn-danger btn-sm mt-4" onclick="doLogout()">Sign out</button>
           </div>
         </div>
@@ -283,6 +302,9 @@
     </div>
 
   </main>
+  <footer style="padding:16px 24px;text-align:center;font-size:12px;color:#aaa;border-top:1px solid var(--border,#eee);margin-top:auto;">
+    © 2026 EduManager — By students, for students.
+  </footer>
 </div>
 
 <div class="modal-overlay" id="modal-student">
@@ -334,11 +356,58 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-classmates">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-classmates-title">Course roster</h3>
+      <button class="modal-close" onclick="closeModal('modal-classmates')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Student name</th></tr></thead>
+          <tbody id="modal-classmates-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Confirm deletion</h3>
+      <button class="modal-close" onclick="closeModal('modal-delete')">×</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:24px;">
+      <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+      <p style="margin-bottom:4px;">Are you sure you want to remove</p>
+      <p style="font-weight:600;font-size:18px;margin-bottom:16px;" id="delete-student-name"></p>
+      <p class="text-muted text-sm" style="margin-bottom:20px;">This action cannot be undone.</p>
+      <div class="flex gap-2" style="justify-content:center;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-delete')">Cancel</button>
+        <button class="btn btn-danger" id="delete-confirm-btn" onclick="confirmDelete()">Remove student</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────
-const API = 'https://student-crud-api-lhju.onrender.com'; // Make sure this matches your FastAPI port!
+const API = 'https://student-crud-api-production-9c58.up.railway.app';
+
+function togglePw(id, el) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    el.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  } else {
+    inp.type = 'password';
+    el.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#888" stroke="none"><path d="M12 4C5 4 1 12 1 12s4 8 11 8 11-8 11-8-4-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>';
+  }
+}
 
 // ── STATE ───────────────────────────────────────────────────────
 let state = {
@@ -392,10 +461,16 @@ function toast(msg, type = 'success') {
 function switchTab(tab) {
   document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
   document.getElementById('tab-register').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('tab-forgot').classList.toggle('hidden', tab !== 'forgot');
   document.querySelectorAll('.tabs button').forEach((b, i) => {
     b.classList.toggle('active', (i === 0) === (tab === 'login'));
   });
   document.getElementById('auth-alert').innerHTML = '';
+}
+
+function showForgotPassword() {
+  switchTab('forgot');
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
 }
 
 function authAlert(msg, type = 'error') {
@@ -407,6 +482,9 @@ async function doLogin() {
   const u = document.getElementById('login-username').value.trim();
   const p = document.getElementById('login-password').value;
   if (!u || !p) return authAlert('Please fill in all fields.');
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
   try {
     const data = await apiForm('/login', { username: u, password: p });
     state.accessToken = data.access_token;
@@ -414,24 +492,28 @@ async function doLogin() {
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
     
-    // UNIFIED ROUTING: Everyone stays in the SPA
     document.getElementById('auth-screen').style.display = 'none';
     await initApp();
     
   } catch (e) { authAlert(e.message); }
+  btn.textContent = 'Sign in';
+  btn.disabled = false;
 }
 
 async function doRegister() {
   const u = document.getElementById('reg-username').value.trim();
   const em = document.getElementById('reg-email').value.trim();
   const p = document.getElementById('reg-password').value;
-  if (!u || !em || !p) return authAlert('Please fill in all fields.');
+  const cp = document.getElementById('reg-confirm-password').value;
+  if (!u || !em || !p || !cp) return authAlert('Please fill in all fields.');
+  if (p !== cp) return authAlert('Passwords do not match!');
   try {
     await api(`/register?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&email=${encodeURIComponent(em)}`, { method: 'POST' });
     document.getElementById('verify-box').style.display = 'block';
     document.getElementById('reg-username').parentElement.style.display = 'none';
     document.getElementById('reg-email').parentElement.style.display = 'none';
-    document.getElementById('reg-password').parentElement.style.display = 'none';
+    document.getElementById('reg-password').parentElement.parentElement.style.display = 'none';
+    document.getElementById('confirm-pw-group').style.display = 'none';
     document.querySelector('#tab-register .btn-primary').style.display = 'none';
     
     authAlert('Account created!', 'success');
@@ -446,6 +528,20 @@ async function doVerify() {
     authAlert('Email verified! You can now sign in.', 'success');
     switchTab('login');
   } catch (e) { authAlert(e.message); }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return authAlert('Please enter your email.');
+  const btn = document.getElementById('forgot-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  try {
+    await api(`/forgot-password?email=${encodeURIComponent(email)}`, { method: 'POST' });
+    authAlert('Password reset link sent to your email!', 'success');
+  } catch (e) { authAlert(e.message); }
+  btn.textContent = 'Send reset link';
+  btn.disabled = false;
 }
 
 async function doLogout() {
@@ -467,22 +563,18 @@ async function initApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
 
-  // sidebar
   document.getElementById('sb-name').textContent = u.username;
   document.getElementById('sb-avatar').textContent = u.username[0].toUpperCase();
   const roleEl = document.getElementById('sb-role');
   roleEl.textContent = u.role;
   roleEl.className = 'role-badge role-' + u.role;
 
-  // role-based nav visibility
   const isAdmin = u.role === 'admin';
   const isAdminOrTeacher = ['admin', 'teacher'].includes(u.role);
   
-  // Hide/Show elements based on CSS classes
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.admin-teacher-only').forEach(el => el.style.display = isAdminOrTeacher ? '' : 'none');
 
-  // Smart Initial Navigation (Like your JSX file)
   if (u.role === 'student') {
     navigate('my-courses');
   } else {
@@ -516,6 +608,11 @@ function loadPage(page) {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 async function loadDashboard() {
+  const u = state.user;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-welcome').textContent = `${greeting}, ${u.username}`;
+  document.getElementById('dash-sub').textContent = `Here's an overview of your ${u.role === 'admin' ? 'system' : 'activity'}.`;
   try {
     const [students, courses] = await Promise.all([
       api('/students?page=1&limit=5'),
@@ -543,8 +640,8 @@ async function loadDashboard() {
       tbody.innerHTML = students.slice(0,5).map(s => `
         <tr>
           <td><strong>${esc(s.name)}</strong></td>
-          <td>${gradeBadge(s.grade)}</td>
-          <td>${s.grade >= 90 ? '<span class="badge badge-success">Excellent</span>' : s.grade >= 70 ? '<span class="badge badge-info">Good</span>' : '<span class="badge badge-warn">Needs work</span>'}</td>
+          <td>${s.grade === 0 ? '<span class="text-muted">Not graded</span>' : gradeBadge(s.grade)}</td>
+          <td>${s.grade === 0 ? '<span class="badge badge-info">New</span>' : s.grade >= 90 ? '<span class="badge badge-success">Excellent</span>' : s.grade >= 70 ? '<span class="badge badge-info">Good</span>' : '<span class="badge badge-warn">Needs work</span>'}</td>
         </tr>`).join('');
     }
   } catch (e) { toast(e.message, 'error'); }
@@ -557,7 +654,6 @@ function debounceStudents() {
 }
 
 async function loadStudents() {
-  // Prevent students from attempting to fetch all students
   if (state.user && state.user.role === 'student') {
       return; 
   }
@@ -643,13 +739,28 @@ async function saveStudent() {
   } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
 }
 
+let pendingDeleteId = null;
+
 async function deleteStudent(id, name) {
-  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  pendingDeleteId = id;
+  document.getElementById('delete-student-name').textContent = name + '?';
+  openModal('modal-delete');
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.textContent = 'Removing...';
+  btn.disabled = true;
   try {
-    await api(`/students/${id}`, { method: 'DELETE' });
-    toast('Student deleted.', 'error');
+    await api(`/students/${pendingDeleteId}`, { method: 'DELETE' });
+    toast('Student removed successfully.');
     loadStudents();
   } catch (e) { toast(e.message, 'error'); }
+  closeModal('modal-delete');
+  btn.textContent = 'Remove student';
+  btn.disabled = false;
+  pendingDeleteId = null;
 }
 
 // ── COURSES ───────────────────────────────────────────────────────
@@ -662,21 +773,37 @@ async function loadCourses() {
       grid.innerHTML = `<div class="empty-state"><div class="icon">📚</div><h3>No courses yet</h3><p>Admins can create courses.</p></div>`;
       return;
     }
-    grid.innerHTML = data.map(c => `
+    // Fetch student counts for each course
+    const courseCards = await Promise.all(data.map(async c => {
+      let count = 0;
+      try {
+        const roster = await api(`/courses/${c.course_id}/students`);
+        count = (roster.students || []).length;
+      } catch (_) {}
+      return `
       <div class="course-card">
-        <div class="course-id-chip">Course #${c.course_id}</div>
         <h3>${esc(c.course_name)}</h3>
-        <p class="teacher">👤 ${esc(c.teacher)}</p>
-        <button class="btn btn-sm btn-secondary" onclick="viewClassmates(${c.course_id},'${esc(c.course_name)}')">View students</button>
-      </div>`).join('');
+        <p class="teacher">Instructor: ${esc(c.teacher)}</p>
+        <p class="text-muted text-sm" style="margin:8px 0;">${count} student${count !== 1 ? 's' : ''} enrolled</p>
+        <button class="btn btn-sm btn-secondary" onclick="viewClassmates(${c.course_id},'${esc(c.course_name)}')">View roster</button>
+      </div>`;
+    }));
+    grid.innerHTML = courseCards.join('');
   } catch (e) { grid.innerHTML = `<p class="text-muted">${esc(e.message)}</p>`; }
 }
 
 async function viewClassmates(cid, name) {
   try {
     const data = await api(`/courses/${cid}/students`);
-    const list = (data.students || []).map(s => `<li style="padding:5px 0;border-bottom:1px solid var(--border)">${esc(s.name)}</li>`).join('');
-    alert(`Students in "${name}":\n\n${(data.students || []).map(s => s.name).join('\n') || 'No students enrolled.'}`);
+    const students = data.students || [];
+    document.getElementById('modal-classmates-title').textContent = name + ' — Roster';
+    const tbody = document.getElementById('modal-classmates-body');
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="2" class="loading-row text-muted">No students enrolled yet.</td></tr>`;
+    } else {
+      tbody.innerHTML = students.map((s, i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('');
+    }
+    openModal('modal-classmates');
   } catch (e) { toast(e.message, 'error'); }
 }
 
@@ -713,8 +840,8 @@ async function loadEnroll() {
   const [courses, students] = await Promise.all([api('/courses'), api('/students')]);
   const cSel = document.getElementById('enroll-course');
   const sSel = document.getElementById('enroll-student');
-  cSel.innerHTML = courses.map(c => `<option value="${c.course_id}">${esc(c.course_name)}</option>`).join('');
-  sSel.innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)} (grade: ${s.grade})</option>`).join('');
+  cSel.innerHTML = courses.map(c => `<option value="${c.course_id}">${esc(c.course_name)} — ${esc(c.teacher)}</option>`).join('');
+  sSel.innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
   cSel.onchange = loadEnrollClassmates;
   loadEnrollClassmates();
 }
@@ -760,9 +887,8 @@ async function loadMyCourses() {
       <p class="text-muted text-sm" style="margin-bottom:16px">Enrolled as: <strong>${esc(data.student)}</strong></p>
       <div class="course-grid">${courses.map(c => `
         <div class="course-card">
-          <div class="course-id-chip">Course #${c.course_id}</div>
           <h3>${esc(c.course_name)}</h3>
-          <p class="teacher">👤 ${esc(c.teacher)}</p>
+          <p class="teacher">Instructor: ${esc(c.teacher)}</p>
         </div>`).join('')}
       </div>`;
   } catch (e) {
@@ -782,9 +908,9 @@ async function loadUsers() {
       tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No users found.</td></tr>`;
       return;
     }
-    tbody.innerHTML = data.map(u => `
+    tbody.innerHTML = data.map((u, i) => `
       <tr>
-        <td class="text-muted text-sm">${u.user_id}</td>
+        <td class="text-muted text-sm">${i + 1}</td>
         <td><strong>${esc(u.username)}</strong></td>
         <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : u.role === 'teacher' ? 'badge-info' : 'badge-success'}">${u.role}</span></td>
         <td>
@@ -812,7 +938,6 @@ function loadProfile() {
   if (!u) return;
   document.getElementById('profile-avatar').textContent = u.username[0].toUpperCase();
   document.getElementById('profile-username').textContent = u.username;
-  document.getElementById('profile-id').textContent = '#' + u.id;
   document.getElementById('profile-role').innerHTML = `<span class="badge ${u.role==='admin'?'badge-warn':u.role==='teacher'?'badge-info':'badge-success'}">${u.role}</span>`;
 }
 
