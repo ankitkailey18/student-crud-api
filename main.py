@@ -17,6 +17,7 @@ import logging
 from email_utils import send_email
 import re
 import os
+from datetime import date
 
 
 logging.basicConfig(
@@ -108,9 +109,7 @@ async def register(request: Request, username: str, password: str, email: str, d
         body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n<a href='{os.getenv('FRONTEND_URL')}/verify?token={verification_token}'>Click here to verify</a>\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"New user registered: {username}")
     return {"message": "User registered! Verification email sent.", "username": user.username}
-    return {"message": "User registered! Verification email sent.", "username": user.username}
 
-@app.get("/verify")
 @app.get("/verify")
 def verify_email(token: str, db: Session = Depends(get_db)):
     payload = verify_token(token)
@@ -138,7 +137,6 @@ async def forgot_password(request: Request, email: str, db: Session = Depends(ge
         subject="Reset your EduManager password",
         body=f"Hi {user.username},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n<a href='{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}'>Click here to reset your password</a>\n\nThis link will expire in 24 hours.\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe EduManager Team")
     logger.info(f"Password reset requested for: {user.username}")
-    return {"message": "Password reset email sent!"}
     return {"message": "Password reset email sent!"}
 
 @app.post("/reset-password")
@@ -381,3 +379,163 @@ def get_course_students(course_id: int, user = Depends(get_current_user), db: Se
             "name": enrollment.student.name
         })
     return {"course": course.course_name, "students": classmates}
+
+@app.post("/courses/{course_id}/assignments")
+def create_assignment(course_id: int, title: str, description: str, max_points: int, due_date: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can create assignments!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    assignment = models.Assignment(title=title, description=description, max_points=max_points, due_date=date.fromisoformat(due_date), course_id=course_id)
+    db.add(assignment)
+    db.commit()
+    db.refresh(assignment)
+    logger.info(f"{user.username} created assignment: {title} in {course.course_name}")
+    return {"message": "Assignment created!", "title": assignment.title, "max_points": assignment.max_points, "due_date": str(assignment.due_date), "course": course.course_name}
+
+@app.get("/courses/{course_id}/assignments")
+def get_assignments(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    assignments = db.query(models.Assignment).filter(models.Assignment.course_id == course_id).all()
+    result = []
+    for a in assignments:
+        result.append({
+            "id": a.id,
+            "title": a.title,
+            "description": a.description,
+            "max_points": a.max_points,
+            "due_date": str(a.due_date)
+        })
+    return {"course": course.course_name, "assignments": result}
+
+@app.post("/courses/{course_id}/attendance")
+def mark_attendance(course_id: int, student_id: int, status: str, attendance_date: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can mark attendance!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found!")
+    status = status.lower()
+    if status not in ["present", "absent", "late"]:
+        raise HTTPException(status_code=400, detail="Status must be present, absent, or late!")
+    attendance = models.Attendance(student_id=student_id, course_id=course_id, date=date.fromisoformat(attendance_date), status=status)
+    db.add(attendance)
+    db.commit()
+    db.refresh(attendance)
+    logger.info(f"{user.username} marked {student.name} as {status} in {course.course_name}")
+    return {"message": f"{student.name} marked as {status}!", "student": student.name, "course": course.course_name, "date": str(attendance.date), "status": attendance.status}
+
+@app.post("/courses/{course_id}/attendance")
+def mark_attendance(course_id: int, student_id: int, status: str, attendance_date: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can mark attendance!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found!")
+    status = status.lower()
+    if status not in ["present", "absent", "late"]:
+        raise HTTPException(status_code=400, detail="Status must be present, absent, or late!")
+    attendance = models.Attendance(student_id=student_id, course_id=course_id, date=date.fromisoformat(attendance_date), status=status)
+    db.add(attendance)
+    db.commit()
+    db.refresh(attendance)
+    logger.info(f"{user.username} marked {student.name} as {status} in {course.course_name}")
+    return {"message": f"{student.name} marked as {status}!", "student": student.name, "course": course.course_name, "date": str(attendance.date), "status": attendance.status}
+
+
+@app.post("/assignments/{assignment_id}/grade")
+def grade_student(assignment_id: int, student_id: int, points_earned: float, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can grade students!")
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found!")
+    student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found!")
+    if points_earned < 0 or points_earned > assignment.max_points:
+        raise HTTPException(status_code=400, detail=f"Points must be between 0 and {assignment.max_points}!")
+    submission = models.Submission(student_id=student_id, assignment_id=assignment_id, points_earned=points_earned)
+    db.add(submission)
+    db.commit()
+    db.refresh(submission)
+    logger.info(f"{user.username} graded {student.name}: {points_earned}/{assignment.max_points} on {assignment.title}")
+    return {"message": "Grade recorded!", "student": student.name, "assignment": assignment.title, "points_earned": submission.points_earned, "max_points": assignment.max_points}
+
+@app.get("/courses/{course_id}/grades")
+def get_course_grades(course_id: int, student_id: int = None, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    assignments = db.query(models.Assignment).filter(models.Assignment.course_id == course_id).all()
+    if not assignments:
+        return {"course": course.course_name, "grades": [], "average": 0}
+    if user.role == "student":
+        student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student profile not found!")
+        student_id = student.id
+    if not student_id:
+        raise HTTPException(status_code=400, detail="student_id is required for admin/teacher!")
+    grades = []
+    total_earned = 0
+    total_possible = 0
+    for a in assignments:
+        submission = db.query(models.Submission).filter(models.Submission.assignment_id == a.id, models.Submission.student_id == student_id).first()
+        grades.append({
+            "assignment": a.title,
+            "max_points": a.max_points,
+            "points_earned": submission.points_earned if submission else None,
+            "due_date": str(a.due_date)
+        })
+        if submission:
+            total_earned += submission.points_earned
+            total_possible += a.max_points
+    average = round((total_earned / total_possible) * 100, 2) if total_possible > 0 else 0
+    return {"course": course.course_name, "grades": grades, "average": average}
+
+@app.post("/courses/{course_id}/attendance/bulk")
+def bulk_attendance(course_id: int, attendance_date: str, records: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can mark attendance!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    import json
+    try:
+        entries = json.loads(records)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid records format!")
+    att_date = date.fromisoformat(attendance_date)
+    count = 0
+    for entry in entries:
+        sid = entry.get("student_id")
+        status = entry.get("status", "present").lower()
+        if status not in ["present", "absent", "late"]:
+            continue
+        student = db.query(models.Student).filter(models.Student.id == sid).first()
+        if not student:
+            continue
+        existing = db.query(models.Attendance).filter(
+            models.Attendance.student_id == sid,
+            models.Attendance.course_id == course_id,
+            models.Attendance.date == att_date
+        ).first()
+        if existing:
+            existing.status = status
+        else:
+            attendance = models.Attendance(student_id=sid, course_id=course_id, date=att_date, status=status)
+            db.add(attendance)
+        count += 1
+    db.commit()
+    logger.info(f"{user.username} marked bulk attendance for {course.course_name}: {count} records")
+    return {"message": f"Attendance recorded for {count} students!", "course": course.course_name, "date": str(att_date)}

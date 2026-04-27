@@ -220,6 +220,99 @@
       <div class="course-grid" id="courses-grid"></div>
     </div>
 
+    <div class="page" id="page-course-detail">
+      <div class="page-header-row">
+        <div class="page-header" style="margin-bottom:0">
+          <h1 id="cd-title">—</h1>
+          <p id="cd-teacher">—</p>
+        </div>
+        <button class="btn btn-secondary" onclick="navigate('courses')" style="white-space:nowrap;">← Back to courses</button>
+      </div>
+      <div class="tabs" style="margin-bottom:20px;">
+        <button class="active" onclick="switchCourseTab('assignments')">Assignments</button>
+        <button onclick="switchCourseTab('attendance')">Attendance</button>
+        <button onclick="switchCourseTab('grades')">Grades</button>
+        <button onclick="switchCourseTab('roster')">Roster</button>
+      </div>
+
+      <div id="cd-tab-assignments">
+        <div class="page-header-row" style="margin-bottom:16px;">
+          <div></div>
+          <button class="btn btn-primary admin-teacher-only" onclick="openAssignmentModal()">+ New assignment</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Title</th><th>Description</th><th>Points</th><th>Due date</th><th class="admin-teacher-only">Actions</th></tr></thead>
+              <tbody id="cd-assignments-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="cd-tab-attendance" style="display:none;">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+          <label style="margin:0;font-weight:500;">Date:</label>
+          <input type="date" id="att-date" class="filter-select"/>
+          <button class="btn btn-secondary" onclick="loadCourseAttendance()">Load</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Student</th><th>Status</th></tr></thead>
+              <tbody id="cd-attendance-body"></tbody>
+            </table>
+          </div>
+          <div class="admin-teacher-only" style="padding:16px;border-top:1px solid var(--border,#eee);display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="submitBulkAttendance()">Submit attendance</button>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="section-title">Attendance history</div>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Student</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody id="cd-attendance-history"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cd-tab-grades" style="display:none;">
+        <div class="admin-teacher-only" style="margin-bottom:16px;display:flex;gap:8px;align-items:center;">
+          <label style="margin:0;">Select student:</label>
+          <select class="filter-select" id="grades-student" onchange="loadCourseGrades()" style="min-width:150px;"></select>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div class="section-title" style="margin:0;">Grade breakdown</div>
+              <div id="grades-average" style="font-size:24px;font-weight:600;">—</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Assignment</th><th>Due date</th><th>Score</th><th>Percentage</th></tr></thead>
+                <tbody id="cd-grades-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cd-tab-roster" style="display:none;">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Student name</th></tr></thead>
+              <tbody id="cd-roster-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-enroll">
       <div class="page-header">
         <h1>Enroll students</h1>
@@ -368,6 +461,62 @@
           <thead><tr><th>#</th><th>Student name</th></tr></thead>
           <tbody id="modal-classmates-body"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-assignment">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>New assignment</h3>
+      <button class="modal-close" onclick="closeModal('modal-assignment')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="modal-assign-title" placeholder="e.g. Midterm Exam"/>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="modal-assign-desc" placeholder="e.g. Chapters 1-5"/>
+      </div>
+      <div class="form-group">
+        <label>Max points</label>
+        <input type="number" id="modal-assign-points" value="100" min="1"/>
+      </div>
+      <div class="form-group">
+        <label>Due date</label>
+        <input type="date" id="modal-assign-due"/>
+      </div>
+      <div id="modal-assign-alert"></div>
+      <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-assignment')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAssignment()">Create assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-grade">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-grade-title">Grade student</h3>
+      <button class="modal-close" onclick="closeModal('modal-grade')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Student</label>
+        <select class="filter-select" id="modal-grade-student" style="width:100%;"></select>
+      </div>
+      <div class="form-group">
+        <label>Points earned</label>
+        <input type="number" id="modal-grade-points" min="0" step="0.5" placeholder="e.g. 85"/>
+      </div>
+      <div id="modal-grade-alert"></div>
+      <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-grade')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitGrade()">Save grade</button>
       </div>
     </div>
   </div>
@@ -599,6 +748,7 @@ function loadPage(page) {
     case 'dashboard':  loadDashboard(); break;
     case 'students':   loadStudents(); break;
     case 'courses':    loadCourses(); break;
+    case 'course-detail': loadCourseDetail(); break;
     case 'enroll':     loadEnroll(); break;
     case 'my-courses': loadMyCourses(); break;
     case 'users':      loadUsers(); break;
@@ -773,38 +923,326 @@ async function loadCourses() {
       grid.innerHTML = `<div class="empty-state"><div class="icon">📚</div><h3>No courses yet</h3><p>Admins can create courses.</p></div>`;
       return;
     }
-    // Fetch student counts for each course
-    const courseCards = await Promise.all(data.map(async c => {
+    const gradients = [
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+      'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
+      'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    ];
+    function courseEmoji(name) {
+      const n = name.toLowerCase();
+      if (n.includes('data structure') || n.includes('algorithm') || n.includes('dsa')) return '🧮';
+      if (n.includes('math') || n.includes('calculus') || n.includes('algebra')) return '📐';
+      if (n.includes('music') || n.includes('appreciation')) return '🎵';
+      if (n.includes('physic')) return '⚛️';
+      if (n.includes('chem')) return '🧪';
+      if (n.includes('bio')) return '🧬';
+      if (n.includes('english') || n.includes('writing') || n.includes('composition')) return '📝';
+      if (n.includes('history')) return '📜';
+      if (n.includes('art') || n.includes('design')) return '🎨';
+      if (n.includes('computer') || n.includes('programming') || n.includes('coding') || n.includes('software')) return '💻';
+      if (n.includes('web') || n.includes('html') || n.includes('frontend')) return '🌐';
+      if (n.includes('database') || n.includes('sql')) return '🗄️';
+      if (n.includes('network')) return '📡';
+      if (n.includes('machine learning') || n.includes('ai') || n.includes('artificial')) return '🤖';
+      if (n.includes('statistics') || n.includes('analytics')) return '📊';
+      if (n.includes('business') || n.includes('management')) return '💼';
+      if (n.includes('econ')) return '📈';
+      if (n.includes('psych')) return '🧠';
+      if (n.includes('philosophy')) return '💭';
+      if (n.includes('language') || n.includes('spanish') || n.includes('french')) return '🗣️';
+      if (n.includes('lab') || n.includes('technq')) return '🔬';
+      return '📚';
+    }
+    const courseCards = await Promise.all(data.map(async (c, idx) => {
       let count = 0;
       try {
         const roster = await api(`/courses/${c.course_id}/students`);
         count = (roster.students || []).length;
       } catch (_) {}
+      const grad = gradients[idx % gradients.length];
+      const emoji = courseEmoji(c.course_name);
       return `
-      <div class="course-card">
-        <h3>${esc(c.course_name)}</h3>
-        <p class="teacher">Instructor: ${esc(c.teacher)}</p>
-        <p class="text-muted text-sm" style="margin:8px 0;">${count} student${count !== 1 ? 's' : ''} enrolled</p>
-        <button class="btn btn-sm btn-secondary" onclick="viewClassmates(${c.course_id},'${esc(c.course_name)}')">View roster</button>
+      <div class="course-card" style="cursor:pointer;overflow:hidden;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:transform 0.2s,box-shadow 0.2s;padding:0;" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')"
+        onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+        onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+        <div style="background:${grad};padding:24px 16px;text-align:center;">
+          <span style="font-size:40px;">${emoji}</span>
+        </div>
+        <div style="padding:16px;">
+          <h3 style="margin:0 0 6px 0;font-size:16px;">${esc(c.course_name)}</h3>
+          <p style="color:#666;font-size:13px;margin:0 0 10px 0;">Instructor: ${esc(c.teacher)}</p>
+          <div style="display:flex;align-items:center;gap:6px;color:#888;font-size:12px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+            ${count} student${count !== 1 ? 's' : ''} enrolled
+          </div>
+        </div>
       </div>`;
     }));
     grid.innerHTML = courseCards.join('');
   } catch (e) { grid.innerHTML = `<p class="text-muted">${esc(e.message)}</p>`; }
 }
 
-async function viewClassmates(cid, name) {
+// ── COURSE DETAIL ─────────────────────────────────────────────────
+let currentCourseId = null;
+let currentCourseName = '';
+let currentCourseTab = 'assignments';
+
+function openCourseDetail(cid, name, teacher) {
+  currentCourseId = cid;
+  currentCourseName = name;
+  document.getElementById('cd-title').textContent = name;
+  document.getElementById('cd-teacher').textContent = 'Instructor: ' + teacher;
+  navigate('course-detail');
+}
+
+function loadCourseDetail() {
+  const isAdmin = state.user.role === 'admin';
+  const isAdminOrTeacher = ['admin', 'teacher'].includes(state.user.role);
+  document.querySelectorAll('#page-course-detail .admin-teacher-only').forEach(el => el.style.display = isAdminOrTeacher ? '' : 'none');
+  document.querySelectorAll('#page-course-detail .admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  document.getElementById('att-date').value = new Date().toISOString().split('T')[0];
+  switchCourseTab(currentCourseTab);
+}
+
+function switchCourseTab(tab) {
+  currentCourseTab = tab;
+  ['assignments', 'attendance', 'grades', 'roster'].forEach(t => {
+    document.getElementById('cd-tab-' + t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#page-course-detail .tabs button').forEach((b, i) => {
+    b.classList.toggle('active', ['assignments', 'attendance', 'grades', 'roster'][i] === tab);
+  });
+  if (tab === 'assignments') loadCourseAssignments();
+  if (tab === 'attendance') loadCourseAttendance();
+  if (tab === 'grades') loadCourseGradesTab();
+  if (tab === 'roster') loadCourseRoster();
+}
+
+async function loadCourseAssignments() {
+  const tbody = document.getElementById('cd-assignments-body');
+  tbody.innerHTML = `<tr><td colspan="6" class="loading-row"><div class="spinner"></div></td></tr>`;
   try {
-    const data = await api(`/courses/${cid}/students`);
-    const students = data.students || [];
-    document.getElementById('modal-classmates-title').textContent = name + ' — Roster';
-    const tbody = document.getElementById('modal-classmates-body');
-    if (!students.length) {
-      tbody.innerHTML = `<tr><td colspan="2" class="loading-row text-muted">No students enrolled yet.</td></tr>`;
-    } else {
-      tbody.innerHTML = students.map((s, i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('');
+    const data = await api(`/courses/${currentCourseId}/assignments`);
+    const assignments = data.assignments || [];
+    if (!assignments.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📝</div><h3>No assignments yet</h3><p>Teachers can create assignments for this course.</p></div></td></tr>`;
+      return;
     }
-    openModal('modal-classmates');
+    const isAT = ['admin', 'teacher'].includes(state.user.role);
+    tbody.innerHTML = assignments.map((a, i) => {
+      const due = new Date(a.due_date);
+      const isPast = due < new Date();
+      return `
+      <tr>
+        <td class="text-muted text-sm">${i + 1}</td>
+        <td><strong>${esc(a.title)}</strong></td>
+        <td class="text-muted">${esc(a.description || '—')}</td>
+        <td>${a.max_points} pts</td>
+        <td><span class="badge ${isPast ? 'badge-warn' : 'badge-info'}">${a.due_date}</span></td>
+        ${isAT ? `<td><button class="btn btn-sm btn-secondary" onclick="openGradeModal(${a.id}, '${esc(a.title)}', ${a.max_points})">Grade</button></td>` : '<td></td>'}
+      </tr>`;
+    }).join('');
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+}
+
+function openAssignmentModal() {
+  document.getElementById('modal-assign-title').value = '';
+  document.getElementById('modal-assign-desc').value = '';
+  document.getElementById('modal-assign-points').value = '100';
+  document.getElementById('modal-assign-due').value = '';
+  document.getElementById('modal-assign-alert').innerHTML = '';
+  openModal('modal-assignment');
+}
+
+async function saveAssignment() {
+  const title = document.getElementById('modal-assign-title').value.trim();
+  const desc = document.getElementById('modal-assign-desc').value.trim();
+  const points = document.getElementById('modal-assign-points').value;
+  const due = document.getElementById('modal-assign-due').value;
+  const alertEl = document.getElementById('modal-assign-alert');
+  if (!title) return alertEl.innerHTML = `<div class="alert alert-error">Title is required.</div>`;
+  if (!due) return alertEl.innerHTML = `<div class="alert alert-error">Due date is required.</div>`;
+  try {
+    await api(`/courses/${currentCourseId}/assignments?title=${encodeURIComponent(title)}&description=${encodeURIComponent(desc)}&max_points=${points}&due_date=${due}`, { method: 'POST' });
+    closeModal('modal-assignment');
+    toast('Assignment created!');
+    loadCourseAssignments();
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+}
+
+let currentGradeAssignmentId = null;
+let currentGradeMaxPoints = 100;
+
+function openGradeModal(assignmentId, title, maxPoints) {
+  currentGradeAssignmentId = assignmentId;
+  currentGradeMaxPoints = maxPoints;
+  document.getElementById('modal-grade-title').textContent = 'Grade: ' + title + ' (' + maxPoints + ' pts)';
+  document.getElementById('modal-grade-points').value = '';
+  document.getElementById('modal-grade-points').max = maxPoints;
+  document.getElementById('modal-grade-alert').innerHTML = '';
+  const sel = document.getElementById('modal-grade-student');
+  sel.innerHTML = '<option value="">Loading...</option>';
+  openModal('modal-grade');
+  api(`/courses/${currentCourseId}/students`).then(data => {
+    const students = data.students || [];
+    sel.innerHTML = students.length
+      ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('')
+      : '<option value="">No students enrolled</option>';
+  });
+}
+
+async function submitGrade() {
+  const sid = document.getElementById('modal-grade-student').value;
+  const points = document.getElementById('modal-grade-points').value;
+  const alertEl = document.getElementById('modal-grade-alert');
+  if (!sid) return alertEl.innerHTML = `<div class="alert alert-error">Select a student.</div>`;
+  if (points === '' || +points < 0 || +points > currentGradeMaxPoints) return alertEl.innerHTML = `<div class="alert alert-error">Points must be 0–${currentGradeMaxPoints}.</div>`;
+  try {
+    await api(`/assignments/${currentGradeAssignmentId}/grade?student_id=${sid}&points_earned=${points}`, { method: 'POST' });
+    closeModal('modal-grade');
+    toast('Grade saved!');
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+}
+
+async function loadCourseAttendance() {
+  const tbody = document.getElementById('cd-attendance-body');
+  const historyBody = document.getElementById('cd-attendance-history');
+  tbody.innerHTML = `<tr><td colspan="3" class="loading-row"><div class="spinner"></div></td></tr>`;
+  historyBody.innerHTML = `<tr><td colspan="4" class="loading-row"><div class="spinner"></div></td></tr>`;
+
+  const isAT = ['admin', 'teacher'].includes(state.user.role);
+
+  // Load roster for marking
+  try {
+    const roster = await api(`/courses/${currentCourseId}/students`);
+    const students = roster.students || [];
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3><p>Enroll students first to mark attendance.</p></div></td></tr>`;
+    } else {
+      tbody.innerHTML = students.map((s, i) => `
+        <tr>
+          <td class="text-muted text-sm">${i + 1}</td>
+          <td><strong>${esc(s.name)}</strong></td>
+          <td>
+            ${isAT ? `
+            <select class="filter-select att-status-select" data-student-id="${s.student_id}" style="padding:5px 10px;font-size:13px;">
+              <option value="present">✅ Present</option>
+              <option value="late">⏰ Late</option>
+              <option value="absent">❌ Absent</option>
+            </select>` : '—'}
+          </td>
+        </tr>`).join('');
+    }
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="3" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+
+  // Load attendance history
+  try {
+    const data = await api(`/courses/${currentCourseId}/attendance`);
+    const records = data.attendance || [];
+    if (!records.length) {
+      historyBody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No attendance records yet.</td></tr>`;
+    } else {
+      historyBody.innerHTML = records.map((r, i) => `
+        <tr>
+          <td class="text-muted text-sm">${i + 1}</td>
+          <td>${esc(r.student_name)}</td>
+          <td>${r.date}</td>
+          <td><span class="badge ${r.status === 'present' ? 'badge-success' : r.status === 'late' ? 'badge-warn' : 'badge-danger'}">${r.status}</span></td>
+        </tr>`).join('');
+    }
+  } catch (e) { historyBody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+}
+
+async function submitBulkAttendance() {
+  const attDate = document.getElementById('att-date').value;
+  if (!attDate) return toast('Please select a date.', 'error');
+  const selects = document.querySelectorAll('.att-status-select');
+  const records = [];
+  selects.forEach(sel => {
+    records.push({
+      student_id: parseInt(sel.dataset.studentId),
+      status: sel.value
+    });
+  });
+  if (!records.length) return toast('No students to mark.', 'error');
+  try {
+    await api(`/courses/${currentCourseId}/attendance/bulk?attendance_date=${attDate}&records=${encodeURIComponent(JSON.stringify(records))}`, { method: 'POST' });
+    toast('Attendance submitted!');
+    loadCourseAttendance();
   } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadCourseGradesTab() {
+  const sel = document.getElementById('grades-student');
+  try {
+    const roster = await api(`/courses/${currentCourseId}/students`);
+    const students = roster.students || [];
+    if (state.user.role === 'student') {
+      sel.parentElement.style.display = 'none';
+      loadCourseGrades();
+    } else {
+      sel.innerHTML = students.length
+        ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('')
+        : '<option value="">No students</option>';
+      if (students.length) loadCourseGrades();
+    }
+  } catch (_) {}
+}
+
+async function loadCourseGrades() {
+  const tbody = document.getElementById('cd-grades-body');
+  const avgEl = document.getElementById('grades-average');
+  tbody.innerHTML = `<tr><td colspan="4" class="loading-row"><div class="spinner"></div></td></tr>`;
+  let url = `/courses/${currentCourseId}/grades`;
+  if (state.user.role !== 'student') {
+    const sid = document.getElementById('grades-student').value;
+    if (!sid) return;
+    url += `?student_id=${sid}`;
+  }
+  try {
+    const data = await api(url);
+    const grades = data.grades || [];
+    const avg = data.average || 0;
+    const letter = avg >= 93 ? 'A' : avg >= 90 ? 'A-' : avg >= 87 ? 'B+' : avg >= 83 ? 'B' : avg >= 80 ? 'B-' : avg >= 77 ? 'C+' : avg >= 73 ? 'C' : avg >= 70 ? 'C-' : avg >= 60 ? 'D' : 'F';
+    avgEl.innerHTML = avg > 0 ? `<span class="badge ${avg >= 70 ? 'badge-success' : avg >= 50 ? 'badge-warn' : 'badge-danger'}" style="font-size:18px;padding:6px 14px;">${letter} ${avg}%</span>` : '<span class="text-muted">No grades yet</span>';
+    if (!grades.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div><h3>No assignments graded</h3></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = grades.map(g => {
+      const pct = g.points_earned !== null ? Math.round((g.points_earned / g.max_points) * 100) : null;
+      return `
+      <tr>
+        <td><strong>${esc(g.assignment)}</strong></td>
+        <td class="text-muted">${g.due_date}</td>
+        <td>${g.points_earned !== null ? g.points_earned + '/' + g.max_points : '<span class="text-muted">Not graded</span>'}</td>
+        <td>${pct !== null ? `<span class="badge ${pct >= 70 ? 'badge-success' : pct >= 50 ? 'badge-warn' : 'badge-danger'}">${pct}%</span>` : '—'}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+}
+
+async function loadCourseRoster() {
+  const tbody = document.getElementById('cd-roster-body');
+  tbody.innerHTML = `<tr><td colspan="2" class="loading-row"><div class="spinner"></div></td></tr>`;
+  try {
+    const data = await api(`/courses/${currentCourseId}/students`);
+    const students = data.students || [];
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = students.map((s, i) => `
+      <tr>
+        <td class="text-muted text-sm">${i + 1}</td>
+        <td>${esc(s.name)}</td>
+      </tr>`).join('');
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="2" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
 async function openCourseModal() {
@@ -883,12 +1321,27 @@ async function loadMyCourses() {
       wrap.innerHTML = `<div class="empty-state"><div class="icon">📖</div><h3>No courses yet</h3><p>You haven't been enrolled in any courses.</p></div>`;
       return;
     }
+    const mGrads = [
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+    ];
     wrap.innerHTML = `
       <p class="text-muted text-sm" style="margin-bottom:16px">Enrolled as: <strong>${esc(data.student)}</strong></p>
-      <div class="course-grid">${courses.map(c => `
-        <div class="course-card">
-          <h3>${esc(c.course_name)}</h3>
-          <p class="teacher">Instructor: ${esc(c.teacher)}</p>
+      <div class="course-grid">${courses.map((c, idx) => `
+        <div class="course-card" style="cursor:pointer;overflow:hidden;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:transform 0.2s,box-shadow 0.2s;padding:0;" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')"
+          onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'"
+          onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'">
+          <div style="background:${mGrads[idx % mGrads.length]};padding:24px 16px;text-align:center;">
+            <span style="font-size:40px;">${courseEmoji(c.course_name)}</span>
+          </div>
+          <div style="padding:16px;">
+            <h3 style="margin:0 0 6px 0;font-size:16px;">${esc(c.course_name)}</h3>
+            <p style="color:#666;font-size:13px;margin:0;">Instructor: ${esc(c.teacher)}</p>
+          </div>
         </div>`).join('')}
       </div>`;
   } catch (e) {
