@@ -17,6 +17,7 @@ import logging
 from email_utils import send_email
 import re
 import os
+import json
 from datetime import date
 
 
@@ -411,25 +412,43 @@ def get_assignments(course_id: int, user = Depends(get_current_user), db: Sessio
         })
     return {"course": course.course_name, "assignments": result}
 
-@app.post("/courses/{course_id}/attendance")
-def mark_attendance(course_id: int, student_id: int, status: str, attendance_date: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+@app.post("/courses/{course_id}/attendance/bulk")
+async def bulk_attendance(course_id: int, request: Request, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role not in ["admin", "teacher"]:
         raise HTTPException(status_code=403, detail="Only admins and teachers can mark attendance!")
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found!")
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found!")
-    status = status.lower()
-    if status not in ["present", "absent", "late"]:
-        raise HTTPException(status_code=400, detail="Status must be present, absent, or late!")
-    attendance = models.Attendance(student_id=student_id, course_id=course_id, date=date.fromisoformat(attendance_date), status=status)
-    db.add(attendance)
+    try:
+        body = await request.json()
+        attendance_date = body.get("attendance_date")
+        entries = body.get("records", [])
+    except:
+        raise HTTPException(status_code=400, detail="Invalid request body!")
+    att_date = date.fromisoformat(attendance_date)
+    count = 0
+    for entry in entries:
+        sid = entry.get("student_id")
+        status = entry.get("status", "present").lower()
+        if status not in ["present", "absent", "late"]:
+            continue
+        student = db.query(models.Student).filter(models.Student.id == sid).first()
+        if not student:
+            continue
+        existing = db.query(models.Attendance).filter(
+            models.Attendance.student_id == sid,
+            models.Attendance.course_id == course_id,
+            models.Attendance.date == att_date
+        ).first()
+        if existing:
+            existing.status = status
+        else:
+            attendance = models.Attendance(student_id=sid, course_id=course_id, date=att_date, status=status)
+            db.add(attendance)
+        count += 1
     db.commit()
-    db.refresh(attendance)
-    logger.info(f"{user.username} marked {student.name} as {status} in {course.course_name}")
-    return {"message": f"{student.name} marked as {status}!", "student": student.name, "course": course.course_name, "date": str(attendance.date), "status": attendance.status}
+    logger.info(f"{user.username} marked bulk attendance for {course.course_name}: {count} records")
+    return {"message": f"Attendance recorded for {count} students!", "course": course.course_name, "date": str(att_date)}
 
 @app.post("/courses/{course_id}/attendance")
 def mark_attendance(course_id: int, student_id: int, status: str, attendance_date: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -451,6 +470,23 @@ def mark_attendance(course_id: int, student_id: int, status: str, attendance_dat
     logger.info(f"{user.username} marked {student.name} as {status} in {course.course_name}")
     return {"message": f"{student.name} marked as {status}!", "student": student.name, "course": course.course_name, "date": str(attendance.date), "status": attendance.status}
 
+@app.get("/courses/{course_id}/attendance")
+def get_attendance(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can view attendance!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    records = db.query(models.Attendance).filter(models.Attendance.course_id == course_id).all()
+    result = []
+    for r in records:
+        result.append({
+            "student_id": r.student_id,
+            "student_name": r.student.name,
+            "date": str(r.date),
+            "status": r.status
+        })
+    return {"course": course.course_name, "attendance": result}
 
 @app.post("/assignments/{assignment_id}/grade")
 def grade_student(assignment_id: int, student_id: int, points_earned: float, user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -502,40 +538,3 @@ def get_course_grades(course_id: int, student_id: int = None, user = Depends(get
             total_possible += a.max_points
     average = round((total_earned / total_possible) * 100, 2) if total_possible > 0 else 0
     return {"course": course.course_name, "grades": grades, "average": average}
-
-@app.post("/courses/{course_id}/attendance/bulk")
-def bulk_attendance(course_id: int, attendance_date: str, records: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role not in ["admin", "teacher"]:
-        raise HTTPException(status_code=403, detail="Only admins and teachers can mark attendance!")
-    course = db.query(models.Course).filter(models.Course.id == course_id).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found!")
-    import json
-    try:
-        entries = json.loads(records)
-    except:
-        raise HTTPException(status_code=400, detail="Invalid records format!")
-    att_date = date.fromisoformat(attendance_date)
-    count = 0
-    for entry in entries:
-        sid = entry.get("student_id")
-        status = entry.get("status", "present").lower()
-        if status not in ["present", "absent", "late"]:
-            continue
-        student = db.query(models.Student).filter(models.Student.id == sid).first()
-        if not student:
-            continue
-        existing = db.query(models.Attendance).filter(
-            models.Attendance.student_id == sid,
-            models.Attendance.course_id == course_id,
-            models.Attendance.date == att_date
-        ).first()
-        if existing:
-            existing.status = status
-        else:
-            attendance = models.Attendance(student_id=sid, course_id=course_id, date=att_date, status=status)
-            db.add(attendance)
-        count += 1
-    db.commit()
-    logger.info(f"{user.username} marked bulk attendance for {course.course_name}: {count} records")
-    return {"message": f"Attendance recorded for {count} students!", "course": course.course_name, "date": str(att_date)}
