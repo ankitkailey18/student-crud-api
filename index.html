@@ -6,7 +6,7 @@
 <title>EduManager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/static/style.css"/>
+<link rel="stylesheet" href="/static/style.css?v=2"/>
 </head>
 <body>
 
@@ -74,7 +74,32 @@
           <span onclick="togglePw('reg-confirm-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;user-select:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#888" stroke="none"><path d="M12 4C5 4 1 12 1 12s4 8 11 8 11-8 11-8-4-8-11-8zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg></span>
         </div>
       </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;margin-bottom:16px;">
+        <p class="text-muted text-sm" style="margin-bottom:12px;">Optional — you can fill these in later from your Profile</p>
+        <div class="form-group">
+          <label>Major / Department</label>
+          <input type="text" id="reg-major" placeholder="e.g. Computer Science"/>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div class="form-group" style="flex:1;">
+            <label>Year</label>
+            <select class="filter-select" id="reg-year" style="width:100%;">
+              <option value="">Select</option>
+              <option value="Freshman">Freshman</option>
+              <option value="Sophomore">Sophomore</option>
+              <option value="Junior">Junior</option>
+              <option value="Senior">Senior</option>
+              <option value="Graduate">Graduate</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Phone</label>
+            <input type="tel" id="reg-phone" placeholder="(555) 123-4567"/>
+          </div>
+        </div>
+      </div>
       <button class="btn btn-primary btn-full" onclick="doRegister()">Create account</button>
+
       <div class="verify-box" id="verify-box" style="display:none; margin-top:16px;">
         <div class="alert alert-info">
           <strong>Check your email!</strong><br>
@@ -92,7 +117,7 @@
       <span id="sb-inst">Student Management</span>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section admin-teacher-only">
+      <div class="nav-section">
         <div class="nav-label">Overview</div>
         <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -116,9 +141,17 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Enroll students
         </div>
-        <div class="nav-item" data-page="my-courses" onclick="navigate('my-courses')">
+        <div class="nav-item student-teacher-only" data-page="my-courses" onclick="navigate('my-courses')">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           My courses
+        </div>
+        <div class="nav-item" data-page="announcements" onclick="navigate('announcements')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Announcements
+        </div>
+        <div class="nav-item student-teacher-only" data-page="deadlines" onclick="navigate('deadlines')">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+          Deadlines
         </div>
       </div>
       <div class="nav-section admin-only">
@@ -155,23 +188,8 @@
         <h1 id="dash-welcome">Dashboard</h1>
         <p id="dash-sub">Welcome back — here's what's happening.</p>
       </div>
-      <div class="stat-grid" id="dash-stats">
-        <div class="stat-card admin-teacher-only"><div class="stat-label">Total students</div><div class="stat-value" id="stat-students">—</div><div class="stat-sub">registered</div></div>
-        <div class="stat-card"><div class="stat-label">Total courses</div><div class="stat-value" id="stat-courses">—</div><div class="stat-sub">available</div></div>
-        <div class="stat-card"><div class="stat-label">My courses</div><div class="stat-value" id="stat-my-courses">—</div><div class="stat-sub">enrolled</div></div>
-        <div class="stat-card admin-only"><div class="stat-label">Total users</div><div class="stat-value" id="stat-users">—</div><div class="stat-sub">registered</div></div>
-      </div>
-      <div class="card">
-        <div class="card-body">
-          <div class="section-title">Recent students</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Name</th><th>Grade</th><th>Status</th></tr></thead>
-              <tbody id="dash-recent"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <div class="stat-grid" id="dash-stats"></div>
+      <div id="dash-content"></div>
     </div>
 
     <div class="page" id="page-students">
@@ -187,14 +205,12 @@
         <select class="filter-select" id="student-sort" onchange="loadStudents()">
           <option value="">Sort: default</option>
           <option value="name">Name A–Z</option>
-          <option value="grade_desc">Grade ↓</option>
-          <option value="grade_asc">Grade ↑</option>
         </select>
       </div>
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>Name</th><th>Grade</th><th>Performance</th><th>Actions</th></tr></thead>
+            <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="students-body"></tbody>
           </table>
         </div>
@@ -216,6 +232,9 @@
         </div>
         <button class="btn btn-primary admin-only" onclick="openCourseModal()">+ Create course</button>
       </div>
+      <div class="toolbar" style="margin-bottom:16px;">
+        <input type="text" class="search-input" id="course-search" placeholder="Search courses..." oninput="filterCourses()"/>
+      </div>
       <div class="course-grid" id="courses-grid"></div>
     </div>
 
@@ -231,8 +250,10 @@
         <button class="active" onclick="switchCourseTab('assignments')">Assignments</button>
         <button onclick="switchCourseTab('attendance')">Attendance</button>
         <button onclick="switchCourseTab('grades')">Grades</button>
+        <button onclick="switchCourseTab('announcements')">Announcements</button>
         <button onclick="switchCourseTab('roster')">Roster</button>
       </div>
+
       <div id="cd-tab-assignments">
         <div class="page-header-row" style="margin-bottom:16px;">
           <div></div>
@@ -247,25 +268,29 @@
           </div>
         </div>
       </div>
+
       <div id="cd-tab-attendance" style="display:none;">
-        <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
-          <label style="margin:0;font-weight:500;">Date:</label>
-          <input type="date" id="att-date" class="filter-select"/>
-          <button class="btn btn-secondary" onclick="loadCourseAttendance()">Load</button>
-        </div>
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Student</th><th>Status</th></tr></thead>
-              <tbody id="cd-attendance-body"></tbody>
-            </table>
+        <div class="admin-teacher-only">
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+            <label style="margin:0;font-weight:500;">Date:</label>
+            <input type="date" id="att-date" class="filter-select"/>
+            <button class="btn btn-secondary" onclick="loadCourseAttendance()">Load</button>
           </div>
-          <div class="admin-teacher-only" style="padding:16px;border-top:1px solid var(--border,#eee);display:flex;justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="submitBulkAttendance()">Submit attendance</button>
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Student</th><th>Status</th></tr></thead>
+                <tbody id="cd-attendance-body"></tbody>
+              </table>
+            </div>
+            <div style="padding:16px;border-top:1px solid var(--border,#eee);display:flex;justify-content:flex-end;">
+              <button class="btn btn-primary" onclick="submitBulkAttendance()">Submit attendance</button>
+            </div>
           </div>
         </div>
         <div style="margin-top:20px;">
-          <div class="section-title">Attendance history</div>
+          <div class="section-title" id="att-history-title">Attendance history</div>
+          <div id="cd-attendance-student-view"></div>
           <div class="card">
             <div class="table-wrap">
               <table>
@@ -276,6 +301,7 @@
           </div>
         </div>
       </div>
+
       <div id="cd-tab-grades" style="display:none;">
         <div class="admin-teacher-only" style="margin-bottom:16px;display:flex;gap:8px;align-items:center;">
           <label style="margin:0;">Select student:</label>
@@ -296,6 +322,25 @@
           </div>
         </div>
       </div>
+
+      <div id="cd-tab-announcements" style="display:none;">
+        <div class="admin-teacher-only" style="margin-bottom:20px;">
+          <div class="card"><div class="card-body">
+            <div class="section-title">Post announcement</div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" id="ann-title" placeholder="e.g. Exam moved to Friday"/>
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea id="ann-body" placeholder="Write your announcement..." style="width:100%;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:80px;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="postAnnouncement()">Post</button>
+          </div></div>
+        </div>
+        <div id="cd-announcements-list"></div>
+      </div>
+
       <div id="cd-tab-roster" style="display:none;">
         <div class="card">
           <div class="table-wrap">
@@ -371,21 +416,148 @@
       </div>
     </div>
 
+    <div class="page" id="page-announcements">
+      <div class="page-header">
+        <h1>Announcements</h1>
+        <p>Latest updates from your courses.</p>
+      </div>
+      <div id="announcements-feed"></div>
+    </div>
+
+    <div class="page" id="page-deadlines">
+      <div class="page-header-row">
+        <div class="page-header" style="margin-bottom:0">
+          <h1>Deadlines</h1>
+          <p>Upcoming assignment due dates across all your courses.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-sm btn-secondary" onclick="calNavMonth(-1)">← Prev</button>
+          <span id="cal-month-label" style="font-weight:600;font-size:15px;min-width:140px;text-align:center;"></span>
+          <button class="btn btn-sm btn-secondary" onclick="calNavMonth(1)">Next →</button>
+          <button class="btn btn-sm btn-secondary" onclick="calGoToday()" style="margin-left:4px;">Today</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);"></div>
+      </div>
+      <div id="cal-upcoming" style="margin-top:24px;"></div>
+    </div>
+
     <div class="page" id="page-profile">
       <div class="page-header">
-        <h1>Profile</h1>
-        <p>Your account information.</p>
+        <h1>Profile & Settings</h1>
+        <p>Your account information and preferences.</p>
       </div>
-      <div style="max-width:400px">
-        <div class="card">
-          <div class="card-body">
-            <div class="profile-avatar" id="profile-avatar">?</div>
-            <div class="info-row"><span class="label">Username</span><span id="profile-username">—</span></div>
-            <div class="info-row"><span class="label">Role</span><span id="profile-role">—</span></div>
-            <div class="info-row"><span class="label">Status</span><span class="badge badge-success">Active</span></div>
-            <button class="btn btn-danger btn-sm mt-4" onclick="doLogout()">Sign out</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:960px;">
+
+        <!-- LEFT COLUMN — Profile Info -->
+        <div>
+          <div class="card">
+            <div class="card-body">
+              <div class="profile-avatar" id="profile-avatar">?</div>
+              <div class="info-row"><span class="label">Username</span><span id="profile-username">—</span></div>
+              <div class="info-row"><span class="label">Email</span><span id="profile-email">—</span></div>
+              <div class="info-row"><span class="label">Role</span><span id="profile-role">—</span></div>
+              <div class="info-row"><span class="label">Banner ID</span><span id="profile-banner">—</span></div>
+              <div class="info-row"><span class="label">Status</span><span id="profile-verified">—</span></div>
+              <div class="info-row"><span class="label">Joined</span><span id="profile-joined">—</span></div>
+            </div>
+          </div>
+
+          <div class="card mt-4" id="profile-edit-card" style="display:none;">
+            <div class="card-body">
+              <div class="section-title">Edit your info</div>
+              <div class="form-group">
+                <label>Major / Department</label>
+                <input type="text" id="profile-major" placeholder="e.g. Computer Science"/>
+              </div>
+              <div style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1;">
+                  <label>Year</label>
+                  <select class="filter-select" id="profile-year" style="width:100%;">
+                    <option value="">Select</option>
+                    <option value="Freshman">Freshman</option>
+                    <option value="Sophomore">Sophomore</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Senior">Senior</option>
+                    <option value="Graduate">Graduate</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label>Phone</label>
+                  <input type="tel" id="profile-phone" placeholder="(555) 123-4567"/>
+                </div>
+              </div>
+              <div id="profile-alert"></div>
+              <button class="btn btn-primary" onclick="saveMyProfile()">Save changes</button>
+            </div>
+          </div>
+
+          <div class="card mt-4" id="profile-courses-card" style="display:none;">
+            <div class="card-body">
+              <div class="section-title" id="profile-courses-title">My courses</div>
+              <div id="profile-courses-list"></div>
+            </div>
           </div>
         </div>
+
+        <!-- RIGHT COLUMN — Settings -->
+        <div>
+          <div class="card">
+            <div class="card-body">
+              <div class="section-title">Appearance</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;">
+                <div>
+                  <div style="font-weight:500;font-size:14px;">Theme</div>
+                  <div class="text-muted text-sm">Choose your preferred theme</div>
+                  <div class="text-muted" style="font-size:11px;margin-top:4px;" id="theme-note"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button class="theme-btn" data-theme="light" onclick="setTheme('light')" style="flex:1;padding:10px 8px;border-radius:10px;border:2px solid var(--border);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--text);display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <span style="font-size:20px;">☀️</span> Light
+                </button>
+                <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')" style="flex:1;padding:10px 8px;border-radius:10px;border:2px solid var(--border);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--text);display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <span style="font-size:20px;">🌙</span> Dark
+                </button>
+                <button class="theme-btn" data-theme="system" onclick="setTheme('system')" style="flex:1;padding:10px 8px;border-radius:10px;border:2px solid var(--border);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--text);display:flex;flex-direction:column;align-items:center;gap:4px;">
+                  <span style="font-size:20px;">💻</span> System
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-body">
+              <div class="section-title">Security</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-weight:500;font-size:14px;">Change password</div>
+                  <div class="text-muted text-sm">Update your account password</div>
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="openModal('modal-change-pw')">Change</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+                <div>
+                  <div style="font-weight:500;font-size:14px;">Active sessions</div>
+                  <div class="text-muted text-sm">Sign out from all devices</div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="logoutAll()">Sign out all</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-body">
+              <div class="section-title">About</div>
+              <div class="info-row"><span class="label">Version</span><span>1.0.0</span></div>
+              <div class="info-row"><span class="label">Built with</span><span>FastAPI + Vanilla JS</span></div>
+            </div>
+          </div>
+
+          <button class="btn btn-danger btn-sm mt-4" onclick="doLogout()">Sign out</button>
+        </div>
+
       </div>
     </div>
 
@@ -393,6 +565,71 @@
   <footer style="padding:16px 24px;text-align:center;font-size:12px;color:#aaa;border-top:1px solid var(--border,#eee);margin-top:auto;">
     © 2026 EduManager — By students, for students.
   </footer>
+</div>
+
+<div class="modal-overlay" id="modal-submit-assignment">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="submit-modal-title">Submit assignment</h3>
+      <button class="modal-close" onclick="closeModal('modal-submit-assignment')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="submit-assignment-id"/>
+      <div class="form-group">
+        <label>Your response (text, link, or notes)</label>
+        <textarea id="submit-content" placeholder="Paste a link, write your answer, or describe your submission..." style="width:100%;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:100px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Attach file (optional — PDF, DOCX, images)</label>
+        <input type="file" id="submit-file" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip" style="font-size:13px;"/>
+      </div>
+      <div id="submit-alert"></div>
+      <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-submit-assignment')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAssignment()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-view-submissions">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <h3 id="view-subs-title">Submissions</h3>
+      <button class="modal-close" onclick="closeModal('modal-view-submissions')">×</button>
+    </div>
+    <div class="modal-body" id="view-subs-body">
+      <div class="loading-row"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-change-pw">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>Change password</h3>
+      <button class="modal-close" onclick="closeModal('modal-change-pw')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Current password</label>
+        <input type="password" id="pw-current" placeholder="Enter current password"/>
+      </div>
+      <div class="form-group">
+        <label>New password</label>
+        <input type="password" id="pw-new" placeholder="Enter new password"/>
+      </div>
+      <div class="form-group">
+        <label>Confirm new password</label>
+        <input type="password" id="pw-confirm" placeholder="Confirm new password"/>
+      </div>
+      <div id="pw-alert"></div>
+      <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('modal-change-pw')">Cancel</button>
+        <button class="btn btn-primary" onclick="changePassword()">Update password</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modal-student">
@@ -403,8 +640,35 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="modal-student-id"/>
-      <div class="form-group"><label>Full name</label><input type="text" id="modal-student-name" placeholder="Student name"/></div>
-      <div class="form-group"><label>Grade (0–100)</label><input type="number" id="modal-student-grade" min="0" max="100" placeholder="e.g. 85"/></div>
+      <div class="form-group">
+        <label>Full name</label>
+        <input type="text" id="modal-student-name" placeholder="Student name"/>
+      </div>
+      <div class="form-group">
+        <label>Major / Department</label>
+        <input type="text" id="modal-student-major" placeholder="e.g. Computer Science"/>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div class="form-group" style="flex:1;">
+          <label>Year</label>
+          <select class="filter-select" id="modal-student-year" style="width:100%;">
+            <option value="">Select</option>
+            <option value="Freshman">Freshman</option>
+            <option value="Sophomore">Sophomore</option>
+            <option value="Junior">Junior</option>
+            <option value="Senior">Senior</option>
+            <option value="Graduate">Graduate</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Phone</label>
+          <input type="tel" id="modal-student-phone" placeholder="(555) 123-4567"/>
+        </div>
+      </div>
+      <div class="form-group" style="display:none;">
+        <label>Grade (0–100)</label>
+        <input type="number" id="modal-student-grade" min="0" max="100" value="0"/>
+      </div>
       <div id="modal-student-alert"></div>
       <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
         <button class="btn btn-secondary" onclick="closeModal('modal-student')">Cancel</button>
@@ -421,12 +685,57 @@
       <button class="modal-close" onclick="closeModal('modal-course')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label>Course name</label><input type="text" id="modal-course-name" placeholder="e.g. Data Structures"/></div>
-      <div class="form-group"><label>Assign teacher</label><select class="filter-select" id="modal-teacher-select" style="width:100%"></select></div>
+      <div class="form-group">
+        <label>Course name</label>
+        <input type="text" id="modal-course-name" placeholder="e.g. Data Structures and Algorithms"/>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <div class="form-group" style="flex:1;">
+          <label>Course code</label>
+          <input type="text" id="modal-course-code" placeholder="e.g. CS04215"/>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Color</label>
+          <select class="filter-select" id="modal-course-color" style="width:100%;">
+            <option value="#2d6a4f">🟢 Green</option>
+            <option value="#1d5fa8">🔵 Blue</option>
+            <option value="#9b59b6">🟣 Purple</option>
+            <option value="#e67e22">🟠 Orange</option>
+            <option value="#c0392b">🔴 Red</option>
+            <option value="#1abc9c">🩵 Teal</option>
+            <option value="#2c3e50">⚫ Dark</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="modal-course-desc" placeholder="What is this course about?" style="width:100%;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;color:var(--text);outline:none;resize:vertical;min-height:70px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Assign teacher</label>
+        <select class="filter-select" id="modal-teacher-select" style="width:100%"></select>
+      </div>
       <div id="modal-course-alert"></div>
       <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
         <button class="btn btn-secondary" onclick="closeModal('modal-course')">Cancel</button>
         <button class="btn btn-primary" onclick="saveCourse()">Create course</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-classmates">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-classmates-title">Course roster</h3>
+      <button class="modal-close" onclick="closeModal('modal-classmates')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Student name</th></tr></thead>
+          <tbody id="modal-classmates-body"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -439,10 +748,22 @@
       <button class="modal-close" onclick="closeModal('modal-assignment')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label>Title</label><input type="text" id="modal-assign-title" placeholder="e.g. Midterm Exam"/></div>
-      <div class="form-group"><label>Description</label><input type="text" id="modal-assign-desc" placeholder="e.g. Chapters 1-5"/></div>
-      <div class="form-group"><label>Max points</label><input type="number" id="modal-assign-points" value="100" min="1"/></div>
-      <div class="form-group"><label>Due date</label><input type="date" id="modal-assign-due"/></div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="modal-assign-title" placeholder="e.g. Midterm Exam"/>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="modal-assign-desc" placeholder="e.g. Chapters 1-5"/>
+      </div>
+      <div class="form-group">
+        <label>Max points</label>
+        <input type="number" id="modal-assign-points" value="100" min="1"/>
+      </div>
+      <div class="form-group">
+        <label>Due date</label>
+        <input type="date" id="modal-assign-due"/>
+      </div>
       <div id="modal-assign-alert"></div>
       <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
         <button class="btn btn-secondary" onclick="closeModal('modal-assignment')">Cancel</button>
@@ -459,8 +780,14 @@
       <button class="modal-close" onclick="closeModal('modal-grade')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label>Student</label><select class="filter-select" id="modal-grade-student" style="width:100%;"></select></div>
-      <div class="form-group"><label>Points earned</label><input type="number" id="modal-grade-points" min="0" step="0.5" placeholder="e.g. 85"/></div>
+      <div class="form-group">
+        <label>Student</label>
+        <select class="filter-select" id="modal-grade-student" style="width:100%;"></select>
+      </div>
+      <div class="form-group">
+        <label>Points earned</label>
+        <input type="number" id="modal-grade-points" min="0" step="0.5" placeholder="e.g. 85"/>
+      </div>
       <div id="modal-grade-alert"></div>
       <div class="flex gap-2" style="justify-content:flex-end;margin-top:8px">
         <button class="btn btn-secondary" onclick="closeModal('modal-grade')">Cancel</button>
@@ -489,6 +816,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-student-detail">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 id="sd-title">Student details</h3>
+      <button class="modal-close" onclick="closeModal('modal-student-detail')">×</button>
+    </div>
+    <div class="modal-body" id="sd-body">
+      <div class="loading-row"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-role">
   <div class="modal" style="max-width:400px">
     <div class="modal-header">
@@ -509,7 +848,10 @@
 <div id="toast"></div>
 
 <script>
-const API = window.location.origin;
+// ── CONFIG ──────────────────────────────────────────────────────
+const API = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8000'
+  : 'https://student-crud-api-production-9c58.up.railway.app';
 
 function togglePw(id, el) {
   const inp = document.getElementById(id);
@@ -522,6 +864,560 @@ function togglePw(id, el) {
   }
 }
 
+// ── STATE ───────────────────────────────────────────────────────
+let state = {
+  accessToken: localStorage.getItem('access_token') || null,
+  refreshToken: localStorage.getItem('refresh_token') || null,
+  user: null,
+  currentPage: 'dashboard',
+  studentPage: 1,
+  studentLimit: 10,
+  studentSearch: '',
+  studentSort: '',
+  studentOrder: 'asc',
+  searchTimer: null,
+};
+
+// ── API HELPERS ─────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (state.accessToken) headers['Authorization'] = 'Bearer ' + state.accessToken;
+  const res = await fetch(API + path, { ...opts, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(err.detail || 'Error ' + res.status);
+  }
+  return res.json();
+}
+
+async function apiForm(path, body) {
+  const form = new URLSearchParams(body);
+  const res = await fetch(API + path, {
+    method: 'POST', body: form,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Login failed' }));
+    throw new Error(err.detail || 'Error');
+  }
+  return res.json();
+}
+
+// ── TOAST ────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show toast-' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = '', 3000);
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('tab-register').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('tab-forgot').classList.toggle('hidden', tab !== 'forgot');
+  document.querySelectorAll('.tabs button').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0) === (tab === 'login'));
+  });
+  document.getElementById('auth-alert').innerHTML = '';
+}
+
+function showForgotPassword() {
+  switchTab('forgot');
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+}
+
+function authAlert(msg, type = 'error') {
+  document.getElementById('auth-alert').innerHTML =
+    `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+async function doLogin() {
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value;
+  if (!u || !p) return authAlert('Please fill in all fields.');
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+  try {
+    const data = await apiForm('/login', { username: u, password: p });
+    state.accessToken = data.access_token;
+    state.refreshToken = data.refresh_token;
+    localStorage.setItem('access_token', data.access_token);
+    localStorage.setItem('refresh_token', data.refresh_token);
+    
+    document.getElementById('auth-screen').style.display = 'none';
+    await initApp();
+    
+  } catch (e) { authAlert(e.message); }
+  btn.textContent = 'Sign in';
+  btn.disabled = false;
+}
+
+async function doRegister() {
+  const u = document.getElementById('reg-username').value.trim();
+  const em = document.getElementById('reg-email').value.trim();
+  const p = document.getElementById('reg-password').value;
+  const cp = document.getElementById('reg-confirm-password').value;
+  const major = document.getElementById('reg-major').value.trim();
+  const year = document.getElementById('reg-year').value;
+  const phone = document.getElementById('reg-phone').value.trim();
+  if (!u || !em || !p || !cp) return authAlert('Please fill in all fields.');
+  if (p !== cp) return authAlert('Passwords do not match!');
+  try {
+    let params = `?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&email=${encodeURIComponent(em)}`;
+    if (major) params += `&major=${encodeURIComponent(major)}`;
+    if (year) params += `&year=${encodeURIComponent(year)}`;
+    if (phone) params += `&phone=${encodeURIComponent(phone)}`;
+    await api(`/register${params}`, { method: 'POST' });
+    document.getElementById('verify-box').style.display = 'block';
+    document.getElementById('reg-username').parentElement.style.display = 'none';
+    document.getElementById('reg-email').parentElement.style.display = 'none';
+    document.getElementById('reg-password').parentElement.parentElement.style.display = 'none';
+    document.getElementById('confirm-pw-group').style.display = 'none';
+    document.querySelector('#tab-register .btn-primary').style.display = 'none';
+    const optionalSection = document.querySelector('#tab-register [style*="border-top"]');
+    if (optionalSection) optionalSection.style.display = 'none';
+    
+    authAlert('Account created!', 'success');
+  } catch (e) { authAlert(e.message); }
+}
+
+async function doVerify() {
+  const tok = document.getElementById('verify-token').value.trim();
+  if (!tok) return authAlert('Paste your verification token.');
+  try {
+    await api(`/verify?token=${encodeURIComponent(tok)}`, { method: 'POST' });
+    authAlert('Email verified! You can now sign in.', 'success');
+    switchTab('login');
+  } catch (e) { authAlert(e.message); }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return authAlert('Please enter your email.');
+  const btn = document.getElementById('forgot-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  try {
+    await api(`/forgot-password?email=${encodeURIComponent(email)}`, { method: 'POST' });
+    authAlert('Password reset link sent to your email!', 'success');
+  } catch (e) { authAlert(e.message); }
+  btn.textContent = 'Send reset link';
+  btn.disabled = false;
+}
+
+async function doLogout() {
+  try { await api('/logout', { method: 'POST' }); } catch (_) {}
+  state.accessToken = null; state.refreshToken = null; state.user = null;
+  localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token');
+  document.getElementById('app').className = '';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+// ── APP INIT ─────────────────────────────────────────────────────
+async function initApp() {
+  try {
+    state.user = await api('/me');
+  } catch (_) {
+    doLogout(); return;
+  }
+  const u = state.user;
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+
+  document.getElementById('sb-name').textContent = u.username;
+  document.getElementById('sb-avatar').textContent = u.username[0].toUpperCase();
+  const roleEl = document.getElementById('sb-role');
+  roleEl.textContent = u.role;
+  roleEl.className = 'role-badge role-' + u.role;
+
+  const isAdmin = u.role === 'admin';
+  const isAdminOrTeacher = ['admin', 'teacher'].includes(u.role);
+  
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  document.querySelectorAll('.admin-teacher-only').forEach(el => el.style.display = isAdminOrTeacher ? '' : 'none');
+  document.querySelectorAll('.student-teacher-only').forEach(el => el.style.display = !isAdmin ? '' : 'none');
+
+  if (u.role === 'student') {
+    navigate('dashboard');
+  } else {
+    navigate('dashboard');
+  }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────
+function navigate(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navEl) navEl.classList.add('active');
+  loadPage(page);
+}
+
+function loadPage(page) {
+  switch (page) {
+    case 'dashboard':  loadDashboard(); break;
+    case 'students':   loadStudents(); break;
+    case 'courses':    loadCourses(); break;
+    case 'course-detail': loadCourseDetail(); break;
+    case 'enroll':     loadEnroll(); break;
+    case 'my-courses': loadMyCourses(); break;
+    case 'announcements': loadAnnouncementsPage(); break;
+    case 'deadlines': loadDeadlinesPage(); break;
+    case 'users':      loadUsers(); break;
+    case 'profile':    loadProfile(); break;
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDashboard() {
+  const u = state.user;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-welcome').textContent = `${greeting}, ${u.username}`;
+  document.getElementById('dash-sub').textContent = u.role === 'student' ? 'Here\'s your academic overview.' : `Here's an overview of your ${u.role === 'admin' ? 'system' : 'courses'}.`;
+
+  const statsGrid = document.getElementById('dash-stats');
+  const contentDiv = document.getElementById('dash-content');
+
+  try {
+    if (u.role === 'admin') {
+      const [students, courses] = await Promise.all([api('/students?page=1&limit=100'), api('/courses')]);
+      let userCount = '—';
+      try { const users = await api('/users'); userCount = users.length; } catch (_) {}
+      statsGrid.innerHTML = `
+        <div class="stat-card"><div class="stat-label">Total students</div><div class="stat-value">${students.length}</div><div class="stat-sub">registered</div></div>
+        <div class="stat-card"><div class="stat-label">Total courses</div><div class="stat-value">${courses.length}</div><div class="stat-sub">available</div></div>
+        <div class="stat-card"><div class="stat-label">Total users</div><div class="stat-value">${userCount}</div><div class="stat-sub">registered</div></div>
+      `;
+      contentDiv.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <div class="section-title">Recent students</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Name</th><th>Status</th></tr></thead>
+              <tbody>${students.slice(0,5).map(s => `<tr><td><strong>${esc(s.name)}</strong></td><td><span class="badge badge-success">Active</span></td></tr>`).join('') || '<tr><td colspan="2" class="loading-row">No students yet.</td></tr>'}</tbody>
+            </table></div>
+          </div>
+        </div>`;
+
+    } else if (u.role === 'teacher') {
+      const [students, courses] = await Promise.all([api('/students?page=1&limit=100'), api('/courses')]);
+      const myCourses = courses.filter(c => c.teacher === u.username);
+      statsGrid.innerHTML = `
+        <div class="stat-card"><div class="stat-label">My courses</div><div class="stat-value">${myCourses.length}</div><div class="stat-sub">teaching</div></div>
+        <div class="stat-card"><div class="stat-label">Total students</div><div class="stat-value">${students.length}</div><div class="stat-sub">registered</div></div>
+        <div class="stat-card"><div class="stat-label">All courses</div><div class="stat-value">${courses.length}</div><div class="stat-sub">available</div></div>
+      `;
+      contentDiv.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <div class="section-title">Recent students</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Name</th><th>Status</th></tr></thead>
+              <tbody>${students.slice(0,5).map(s => `<tr><td><strong>${esc(s.name)}</strong></td><td><span class="badge badge-success">Active</span></td></tr>`).join('') || '<tr><td colspan="2" class="loading-row">No students yet.</td></tr>'}</tbody>
+            </table></div>
+          </div>
+        </div>`;
+
+    } else {
+      // STUDENT DASHBOARD
+      let myCourses = [];
+      try { const mc = await api('/my-courses'); myCourses = mc.courses || []; } catch (_) {}
+
+      let allGrades = [];
+      for (const c of myCourses) {
+        try {
+          const gradeData = await api(`/courses/${c.course_id}/grades`);
+          const gList = gradeData.grades || gradeData || [];
+          if (Array.isArray(gList)) {
+            gList.forEach(g => {
+              if (g.points_earned !== null) allGrades.push({ ...g, assignment_title: g.assignment, course_name: c.course_name });
+            });
+          }
+        } catch (_) {}
+      }
+
+      const gpa = allGrades.length > 0
+        ? (() => {
+            const pts = allGrades.map(g => {
+              const pct = g.max_points ? (g.points_earned / g.max_points) * 100 : 0;
+              if (pct >= 93) return 4.0; if (pct >= 90) return 3.7; if (pct >= 87) return 3.3;
+              if (pct >= 83) return 3.0; if (pct >= 80) return 2.7; if (pct >= 77) return 2.3;
+              if (pct >= 73) return 2.0; if (pct >= 70) return 1.7; if (pct >= 67) return 1.3;
+              if (pct >= 60) return 1.0; return 0.0;
+            });
+            return (pts.reduce((a, b) => a + b, 0) / pts.length).toFixed(2);
+          })()
+        : 'N/A';
+
+      statsGrid.innerHTML = `
+        <div class="stat-card"><div class="stat-label">Enrolled courses</div><div class="stat-value">${myCourses.length}</div><div class="stat-sub">active</div></div>
+        <div class="stat-card"><div class="stat-label">GPA</div><div class="stat-value">${gpa}</div><div class="stat-sub">${allGrades.length > 0 ? '4.0 scale' : 'no grades yet'}</div></div>
+        <div class="stat-card"><div class="stat-label">Graded work</div><div class="stat-value">${allGrades.length}</div><div class="stat-sub">submission${allGrades.length !== 1 ? 's' : ''}</div></div>
+      `;
+
+      let announcements = [];
+      try { announcements = await api('/announcements/feed'); } catch (_) {}
+
+      let html = '';
+
+      // Announcements as compact banners
+      if (announcements.length) {
+        html += `<div style="margin-bottom:20px;">`;
+        html += announcements.slice(0, 3).map(a => {
+          const date = a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+          return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--info-bg);border:1px solid #b9d6f2;border-radius:var(--radius);margin-bottom:8px;">
+            <span style="font-size:16px;flex-shrink:0;margin-top:1px;">📢</span>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <strong style="font-size:13px;color:var(--info);">${esc(a.title)}</strong>
+                <span style="font-size:10px;color:var(--muted);">${esc(a.course)} · ${esc(a.author)} · ${date}</span>
+              </div>
+              <p style="color:var(--text);font-size:12px;margin:3px 0 0;line-height:1.4;opacity:.8;">${esc(a.body).substring(0, 100)}${a.body.length > 100 ? '...' : ''}</p>
+            </div>
+          </div>`;
+        }).join('');
+        html += `</div>`;
+      }
+
+      // My courses — Canvas style
+      const cardColors = ['#2d6a4f','#1d5fa8','#9b59b6','#e67e22','#c0392b','#1abc9c'];
+      if (myCourses.length) {
+        html += `<div class="section-title">My courses</div>
+        <div class="course-grid" style="margin-bottom:24px;">
+          ${myCourses.map((c, idx) => {
+            const clr = cardColors[idx % cardColors.length];
+            return `<div class="course-card" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')" style="padding:0;cursor:pointer;overflow:hidden;border-radius:var(--radius-lg);">
+              <div style="background:${clr};padding:24px 20px 20px;position:relative;overflow:hidden;min-height:90px;display:flex;flex-direction:column;justify-content:flex-end;">
+                <div style="position:absolute;inset:0;background-image:linear-gradient(135deg,rgba(255,255,255,.06) 25%,transparent 25%),linear-gradient(225deg,rgba(255,255,255,.06) 25%,transparent 25%);background-size:30px 30px;opacity:.3;"></div>
+                <h3 style="margin:0;font-size:15px;font-weight:700;color:#fff;position:relative;z-index:1;text-transform:uppercase;letter-spacing:.03em;line-height:1.3;">${esc(c.course_name)}</h3>
+              </div>
+              <div style="padding:12px 20px 14px;">
+                <span style="font-size:12px;color:var(--muted);">${esc(c.teacher)}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      } else {
+        html += `<div class="card" style="margin-bottom:24px;"><div class="card-body" style="text-align:center;padding:40px;">
+          <div style="font-size:36px;margin-bottom:12px;opacity:.35;">📚</div>
+          <h3 style="font-family:'Instrument Serif',serif;font-size:18px;font-weight:400;margin-bottom:6px;">No courses yet</h3>
+          <p class="text-muted text-sm" style="margin-bottom:16px;">Browse available courses and enroll to get started</p>
+          <button class="btn btn-primary btn-sm" onclick="navigate('courses')">Browse courses</button>
+        </div></div>`;
+      }
+
+      // Recent grades
+      if (allGrades.length) {
+        html += `<div class="card"><div class="card-body"><div class="section-title">Recent grades</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Assignment</th><th>Course</th><th>Score</th></tr></thead>
+            <tbody>${allGrades.slice(0, 5).map(g => {
+              const pct = g.max_points ? Math.round((g.points_earned / g.max_points) * 100) : 0;
+              const badge = pct >= 90 ? 'badge-success' : pct >= 70 ? 'badge-info' : pct >= 50 ? 'badge-warn' : 'badge-danger';
+              return `<tr><td><strong>${esc(g.assignment_title || 'Assignment')}</strong></td><td class="text-muted text-sm">${esc(g.course_name)}</td><td><span class="badge ${badge}">${g.points_earned}/${g.max_points}</span></td></tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div></div>`;
+      }
+
+      contentDiv.innerHTML = html;
+    }
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ── STUDENTS ──────────────────────────────────────────────────────
+function debounceStudents() {
+  clearTimeout(state.searchTimer);
+  state.searchTimer = setTimeout(() => { state.studentPage = 1; loadStudents(); }, 350);
+}
+
+async function loadStudents() {
+  if (state.user && state.user.role === 'student') {
+      return; 
+  }
+
+  const search = document.getElementById('student-search').value.trim();
+  const sortVal = document.getElementById('student-sort').value;
+  let sort = '', order = 'asc';
+  if (sortVal === 'name') { sort = 'name'; }
+
+  let url = `/students?page=${state.studentPage}&limit=${state.studentLimit}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (sort)   url += `&sort=${sort}&order=${order}`;
+
+  const tbody = document.getElementById('students-body');
+  tbody.innerHTML = `<tr><td colspan="4" class="loading-row"><div class="spinner"></div></td></tr>`;
+  try {
+    const data = await api(url);
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">👨‍🎓</div><h3>No students found</h3><p>Try a different search.</p></div></td></tr>`;
+    } else {
+      const isAT = ['admin','teacher'].includes(state.user.role);
+      const isAdmin = state.user.role === 'admin';
+      tbody.innerHTML = data.map((s, i) => `
+        <tr>
+          <td class="text-muted text-sm">${(state.studentPage-1)*state.studentLimit + i + 1}</td>
+          <td><strong style="cursor:pointer;color:var(--accent);" onclick="viewStudent(${s.id})">${esc(s.name)}</strong></td>
+          <td><span class="badge badge-success">Active</span></td>
+          <td>
+            <div class="actions">
+              ${isAT ? `<button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id},'${esc(s.name)}',${s.grade})">Edit</button>` : ''}
+              ${isAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id},'${esc(s.name)}')">Delete</button>` : ''}
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    prevBtn.disabled = state.studentPage === 1;
+    nextBtn.disabled = data.length < state.studentLimit;
+    document.getElementById('student-pg-info').textContent = `Page ${state.studentPage}`;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function changePage(dir) {
+  state.studentPage = Math.max(1, state.studentPage + dir);
+  loadStudents();
+}
+
+function openStudentModal(id, name, grade, major, year, phone) {
+  document.getElementById('modal-student-id').value = id || '';
+  document.getElementById('modal-student-name').value = name || '';
+  document.getElementById('modal-student-grade').value = grade !== undefined ? grade : 0;
+  document.getElementById('modal-student-major').value = major || '';
+  document.getElementById('modal-student-year').value = year || '';
+  document.getElementById('modal-student-phone').value = phone || '';
+  document.getElementById('modal-student-title').textContent = id ? 'Edit student' : 'Add student';
+  document.getElementById('modal-student-alert').innerHTML = '';
+  openModal('modal-student');
+}
+
+async function viewStudent(id) {
+  const body = document.getElementById('sd-body');
+  body.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
+  document.getElementById('sd-title').textContent = 'Student details';
+  openModal('modal-student-detail');
+  try {
+    const s = await api(`/students/${id}`);
+    document.getElementById('sd-title').textContent = s.name;
+    const courses = s.enrolled_courses || [];
+    const joined = s.created_at ? new Date(s.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    const verifiedBadge = s.is_verified
+      ? `<span class="badge badge-success">✓ Verified</span>`
+      : `<span class="badge badge-warn">✗ Unverified</span>`;
+    body.innerHTML = `
+      <div style="text-align:center;margin-bottom:24px;">
+        <div class="profile-avatar" style="margin:0 auto 12px;">${s.name.charAt(0).toUpperCase()}</div>
+        <h3 style="font-family:'Instrument Serif',serif;font-size:22px;font-weight:400;">${esc(s.name)}</h3>
+        ${s.banner_id ? `<p style="color:var(--accent);font-size:13px;font-weight:600;margin-top:4px;letter-spacing:.04em;">${esc(s.banner_id)}</p>` : ''}
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;">
+          ${verifiedBadge}
+          <span class="badge badge-info">${esc(s.role || 'student')}</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;">
+        <div class="info-row" style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <span class="label">Email</span>
+          <span>${s.email ? esc(s.email) : '—'}</span>
+        </div>
+        <div class="info-row" style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <span class="label">Major</span>
+          <span>${s.major ? esc(s.major) : '—'}</span>
+        </div>
+        <div class="info-row" style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <span class="label">Year</span>
+          <span>${s.year ? esc(s.year) : '—'}</span>
+        </div>
+        <div class="info-row" style="border-bottom:1px solid var(--border);padding:10px 0;">
+          <span class="label">Phone</span>
+          <span>${s.phone ? esc(s.phone) : '—'}</span>
+        </div>
+        <div class="info-row" style="padding:10px 0;border-bottom:none;">
+          <span class="label">Joined</span>
+          <span>${joined}</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Enrolled courses (${courses.length})</div>
+        ${courses.length ? `
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${courses.map(c => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);">
+                <div>
+                  <div style="font-weight:500;font-size:14px;">${courseEmoji(c.course_name)} ${esc(c.course_name)}</div>
+                  <div class="text-muted text-sm">Instructor: ${esc(c.teacher)}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `<p class="text-muted text-sm">Not enrolled in any courses yet.</p>`}
+      </div>
+    `;
+  } catch (e) {
+    body.innerHTML = `<p class="text-muted" style="text-align:center;padding:20px;">${esc(e.message)}</p>`;
+  }
+}
+
+async function saveStudent() {
+  const id    = document.getElementById('modal-student-id').value;
+  const name  = document.getElementById('modal-student-name').value.trim();
+  const grade = document.getElementById('modal-student-grade').value;
+  const major = document.getElementById('modal-student-major').value.trim();
+  const year  = document.getElementById('modal-student-year').value;
+  const phone = document.getElementById('modal-student-phone').value.trim();
+  const alertEl = document.getElementById('modal-student-alert');
+  if (!name) return alertEl.innerHTML = `<div class="alert alert-error">Name is required.</div>`;
+  if (grade === '' || isNaN(grade) || +grade < 0 || +grade > 100)
+    return alertEl.innerHTML = `<div class="alert alert-error">Grade must be 0–100.</div>`;
+  try {
+    let params = `?name=${encodeURIComponent(name)}&grade=${grade}`;
+    if (major) params += `&major=${encodeURIComponent(major)}`;
+    if (year)  params += `&year=${encodeURIComponent(year)}`;
+    if (phone) params += `&phone=${encodeURIComponent(phone)}`;
+    if (id) await api(`/students/${id}${params}`, { method: 'PUT' });
+    else    await api(`/students${params}`, { method: 'POST' });
+    closeModal('modal-student');
+    toast(id ? 'Student updated!' : 'Student added!');
+    loadStudents();
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+}
+
+let pendingDeleteId = null;
+
+async function deleteStudent(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('delete-student-name').textContent = name + '?';
+  openModal('modal-delete');
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.textContent = 'Removing...';
+  btn.disabled = true;
+  try {
+    await api(`/students/${pendingDeleteId}`, { method: 'DELETE' });
+    toast('Student removed successfully.');
+    loadStudents();
+  } catch (e) { toast(e.message, 'error'); }
+  closeModal('modal-delete');
+  btn.textContent = 'Remove student';
+  btn.disabled = false;
+  pendingDeleteId = null;
+}
+
+// ── COURSES ───────────────────────────────────────────────────────
 function courseEmoji(name) {
   const n = name.toLowerCase();
   if (n.includes('data structure') || n.includes('algorithm') || n.includes('dsa')) return '🧮';
@@ -548,260 +1444,152 @@ function courseEmoji(name) {
   return '📚';
 }
 
-let state = {
-  accessToken: localStorage.getItem('access_token') || null,
-  refreshToken: localStorage.getItem('refresh_token') || null,
-  user: null, currentPage: 'dashboard',
-  studentPage: 1, studentLimit: 10, searchTimer: null,
-};
-
-async function api(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
-  if (state.accessToken) headers['Authorization'] = 'Bearer ' + state.accessToken;
-  const res = await fetch(API + path, { ...opts, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(err.detail || 'Error ' + res.status);
-  }
-  return res.json();
-}
-
-async function apiForm(path, body) {
-  const form = new URLSearchParams(body);
-  const res = await fetch(API + path, {
-    method: 'POST', body: form,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Login failed' }));
-    throw new Error(err.detail || 'Error');
-  }
-  return res.json();
-}
-
-function toast(msg, type = 'success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.className = 'show toast-' + type;
-  clearTimeout(el._t); el._t = setTimeout(() => el.className = '', 3000);
-}
-
-function switchTab(tab) {
-  document.getElementById('tab-login').classList.toggle('hidden', tab !== 'login');
-  document.getElementById('tab-register').classList.toggle('hidden', tab !== 'register');
-  document.getElementById('tab-forgot').classList.toggle('hidden', tab !== 'forgot');
-  document.querySelectorAll('.tabs button').forEach((b, i) => {
-    b.classList.toggle('active', (i === 0) === (tab === 'login'));
-  });
-  document.getElementById('auth-alert').innerHTML = '';
-}
-
-function showForgotPassword() {
-  switchTab('forgot');
-  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-}
-
-function authAlert(msg, type = 'error') {
-  document.getElementById('auth-alert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-}
-
-async function doLogin() {
-  const u = document.getElementById('login-username').value.trim();
-  const p = document.getElementById('login-password').value;
-  if (!u || !p) return authAlert('Please fill in all fields.');
-  const btn = document.getElementById('login-btn');
-  btn.textContent = 'Signing in...'; btn.disabled = true;
+async function selfEnroll(courseId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Enrolling...';
   try {
-    const data = await apiForm('/login', { username: u, password: p });
-    state.accessToken = data.access_token; state.refreshToken = data.refresh_token;
-    localStorage.setItem('access_token', data.access_token);
-    localStorage.setItem('refresh_token', data.refresh_token);
-    document.getElementById('auth-screen').style.display = 'none';
-    await initApp();
-  } catch (e) { authAlert(e.message); }
-  btn.textContent = 'Sign in'; btn.disabled = false;
-}
-
-async function doRegister() {
-  const u = document.getElementById('reg-username').value.trim();
-  const em = document.getElementById('reg-email').value.trim();
-  const p = document.getElementById('reg-password').value;
-  const cp = document.getElementById('reg-confirm-password').value;
-  if (!u || !em || !p || !cp) return authAlert('Please fill in all fields.');
-  if (p !== cp) return authAlert('Passwords do not match!');
-  try {
-    await api(`/register?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&email=${encodeURIComponent(em)}`, { method: 'POST' });
-    document.getElementById('verify-box').style.display = 'block';
-    document.getElementById('reg-username').parentElement.style.display = 'none';
-    document.getElementById('reg-email').parentElement.style.display = 'none';
-    document.getElementById('reg-password').parentElement.parentElement.style.display = 'none';
-    document.getElementById('confirm-pw-group').style.display = 'none';
-    document.querySelector('#tab-register .btn-primary').style.display = 'none';
-    authAlert('Account created!', 'success');
-  } catch (e) { authAlert(e.message); }
-}
-
-async function doForgotPassword() {
-  const email = document.getElementById('forgot-email').value.trim();
-  if (!email) return authAlert('Please enter your email.');
-  const btn = document.getElementById('forgot-btn');
-  btn.textContent = 'Sending...'; btn.disabled = true;
-  try {
-    await api(`/forgot-password?email=${encodeURIComponent(email)}`, { method: 'POST' });
-    authAlert('Password reset link sent to your email!', 'success');
-  } catch (e) { authAlert(e.message); }
-  btn.textContent = 'Send reset link'; btn.disabled = false;
-}
-
-async function doLogout() {
-  try { await api('/logout', { method: 'POST' }); } catch (_) {}
-  state.accessToken = null; state.refreshToken = null; state.user = null;
-  localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token');
-  document.getElementById('app').className = '';
-  document.getElementById('auth-screen').style.display = 'flex';
-}
-
-async function initApp() {
-  try { state.user = await api('/me'); } catch (_) { doLogout(); return; }
-  const u = state.user;
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').classList.add('visible');
-  document.getElementById('sb-name').textContent = u.username;
-  document.getElementById('sb-avatar').textContent = u.username[0].toUpperCase();
-  const roleEl = document.getElementById('sb-role');
-  roleEl.textContent = u.role; roleEl.className = 'role-badge role-' + u.role;
-  const isAdmin = u.role === 'admin';
-  const isAT = ['admin', 'teacher'].includes(u.role);
-  document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
-  document.querySelectorAll('.admin-teacher-only').forEach(el => el.style.display = isAT ? '' : 'none');
-  navigate(u.role === 'student' ? 'my-courses' : 'dashboard');
-}
-
-function navigate(page) {
-  state.currentPage = page;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const pageEl = document.getElementById('page-' + page);
-  if (pageEl) pageEl.classList.add('active');
-  const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
-  if (navEl) navEl.classList.add('active');
-  loadPage(page);
-}
-
-function loadPage(page) {
-  switch (page) {
-    case 'dashboard': loadDashboard(); break;
-    case 'students': loadStudents(); break;
-    case 'courses': loadCourses(); break;
-    case 'course-detail': loadCourseDetail(); break;
-    case 'enroll': loadEnroll(); break;
-    case 'my-courses': loadMyCourses(); break;
-    case 'users': loadUsers(); break;
-    case 'profile': loadProfile(); break;
+    const res = await api(`/courses/${courseId}/self-enroll`, { method: 'POST' });
+    toast(res.message);
+    loadCourses();
+  } catch (e) {
+    toast(e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Enroll';
   }
 }
 
-async function loadDashboard() {
-  const u = state.user;
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('dash-welcome').textContent = `${greeting}, ${u.username}`;
-  document.getElementById('dash-sub').textContent = `Here's an overview of your ${u.role === 'admin' ? 'system' : 'activity'}.`;
+async function selfUnenroll(courseId, btn) {
+  if (!confirm('Are you sure you want to unenroll from this course?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Unenrolling...';
   try {
-    const [students, courses] = await Promise.all([api('/students?page=1&limit=5'), api('/courses')]);
-    document.getElementById('stat-students').textContent = students.length >= 5 ? '5+' : students.length;
-    document.getElementById('stat-courses').textContent = courses.length;
-    try { const mc = await api('/my-courses'); document.getElementById('stat-my-courses').textContent = (mc.courses || []).length; } catch (_) { document.getElementById('stat-my-courses').textContent = '—'; }
-    if (u.role === 'admin') { try { const users = await api('/users'); document.getElementById('stat-users').textContent = users.length; } catch (_) {} }
-    const tbody = document.getElementById('dash-recent');
-    if (!students.length) { tbody.innerHTML = `<tr><td colspan="3" class="loading-row">No students yet.</td></tr>`; }
-    else { tbody.innerHTML = students.slice(0,5).map(s => `<tr><td><strong>${esc(s.name)}</strong></td><td>${s.grade === 0 ? '<span class="text-muted">Not graded</span>' : gradeBadge(s.grade)}</td><td>${s.grade === 0 ? '<span class="badge badge-info">New</span>' : s.grade >= 90 ? '<span class="badge badge-success">Excellent</span>' : s.grade >= 70 ? '<span class="badge badge-info">Good</span>' : '<span class="badge badge-warn">Needs work</span>'}</td></tr>`).join(''); }
-  } catch (e) { toast(e.message, 'error'); }
+    const res = await api(`/courses/${courseId}/self-unenroll`, { method: 'DELETE' });
+    toast(res.message);
+    loadCourses();
+  } catch (e) {
+    toast(e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '✓ Enrolled';
+  }
 }
 
-function debounceStudents() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(() => { state.studentPage = 1; loadStudents(); }, 350); }
-
-async function loadStudents() {
-  if (state.user && state.user.role === 'student') return;
-  const search = document.getElementById('student-search').value.trim();
-  const sortVal = document.getElementById('student-sort').value;
-  let sort = '', order = 'asc';
-  if (sortVal === 'name') sort = 'name';
-  else if (sortVal === 'grade_desc') { sort = 'grade'; order = 'desc'; }
-  else if (sortVal === 'grade_asc') { sort = 'grade'; order = 'asc'; }
-  let url = `/students?page=${state.studentPage}&limit=${state.studentLimit}`;
-  if (search) url += `&search=${encodeURIComponent(search)}`;
-  if (sort) url += `&sort=${sort}&order=${order}`;
-  const tbody = document.getElementById('students-body');
-  tbody.innerHTML = `<tr><td colspan="5" class="loading-row"><div class="spinner"></div></td></tr>`;
-  try {
-    const data = await api(url);
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">👨‍🎓</div><h3>No students found</h3><p>Try a different search.</p></div></td></tr>`; }
-    else {
-      const isAT = ['admin','teacher'].includes(state.user.role);
-      const isAdmin = state.user.role === 'admin';
-      tbody.innerHTML = data.map((s, i) => `<tr><td class="text-muted text-sm">${(state.studentPage-1)*state.studentLimit+i+1}</td><td><strong>${esc(s.name)}</strong></td><td>${s.grade}</td><td><div class="grade-bar"><div class="grade-track"><div class="grade-fill" style="width:${s.grade}%"></div></div>${gradeBadge(s.grade)}</div></td><td><div class="actions">${isAT ? `<button class="btn btn-sm btn-secondary" onclick="openStudentModal(${s.id},'${esc(s.name)}',${s.grade})">Edit</button>` : ''}${isAdmin ? `<button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id},'${esc(s.name)}')">Delete</button>` : ''}</div></td></tr>`).join('');
-    }
-    document.getElementById('btn-prev').disabled = state.studentPage === 1;
-    document.getElementById('btn-next').disabled = data.length < state.studentLimit;
-    document.getElementById('student-pg-info').textContent = `Page ${state.studentPage}`;
-  } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
-}
-
-function changePage(dir) { state.studentPage = Math.max(1, state.studentPage + dir); loadStudents(); }
-
-function openStudentModal(id, name, grade) {
-  document.getElementById('modal-student-id').value = id || '';
-  document.getElementById('modal-student-name').value = name || '';
-  document.getElementById('modal-student-grade').value = grade !== undefined ? grade : '';
-  document.getElementById('modal-student-title').textContent = id ? 'Edit student' : 'Add student';
-  document.getElementById('modal-student-alert').innerHTML = '';
-  openModal('modal-student');
-}
-
-async function saveStudent() {
-  const id = document.getElementById('modal-student-id').value;
-  const name = document.getElementById('modal-student-name').value.trim();
-  const grade = document.getElementById('modal-student-grade').value;
-  const alertEl = document.getElementById('modal-student-alert');
-  if (!name) return alertEl.innerHTML = `<div class="alert alert-error">Name is required.</div>`;
-  if (grade === '' || isNaN(grade) || +grade < 0 || +grade > 100) return alertEl.innerHTML = `<div class="alert alert-error">Grade must be 0–100.</div>`;
-  try {
-    const params = `?name=${encodeURIComponent(name)}&grade=${grade}`;
-    if (id) await api(`/students/${id}${params}`, { method: 'PUT' });
-    else await api(`/students${params}`, { method: 'POST' });
-    closeModal('modal-student'); toast(id ? 'Student updated!' : 'Student added!'); loadStudents();
-  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
-}
-
-let pendingDeleteId = null;
-function deleteStudent(id, name) { pendingDeleteId = id; document.getElementById('delete-student-name').textContent = name + '?'; openModal('modal-delete'); }
-async function confirmDelete() {
-  if (!pendingDeleteId) return;
-  const btn = document.getElementById('delete-confirm-btn'); btn.textContent = 'Removing...'; btn.disabled = true;
-  try { await api(`/students/${pendingDeleteId}`, { method: 'DELETE' }); toast('Student removed successfully.'); loadStudents(); } catch (e) { toast(e.message, 'error'); }
-  closeModal('modal-delete'); btn.textContent = 'Remove student'; btn.disabled = false; pendingDeleteId = null;
-}
+let _allCoursesCache = [];
+let _myEnrolledCache = new Set();
+let _courseCountsCache = {};
+let _courseNextDueCache = {};
 
 async function loadCourses() {
   const grid = document.getElementById('courses-grid');
   grid.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
   try {
-    const data = await api('/courses');
-    if (!data.length) { grid.innerHTML = `<div class="empty-state"><div class="icon">📚</div><h3>No courses yet</h3><p>Admins can create courses.</p></div>`; return; }
-    const gradients = ['linear-gradient(135deg,#667eea 0%,#764ba2 100%)','linear-gradient(135deg,#f093fb 0%,#f5576c 100%)','linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)','linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)','linear-gradient(135deg,#fa709a 0%,#fee140 100%)','linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%)','linear-gradient(135deg,#fccb90 0%,#d57eeb 100%)','linear-gradient(135deg,#30cfd0 0%,#330867 100%)'];
-    const courseCards = await Promise.all(data.map(async (c, idx) => {
-      let count = 0;
-      try { const roster = await api(`/courses/${c.course_id}/students`); count = (roster.students || []).length; } catch (_) {}
-      return `<div class="course-card" style="cursor:pointer;overflow:hidden;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:transform 0.2s,box-shadow 0.2s;padding:0;" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'"><div style="background:${gradients[idx%gradients.length]};padding:24px 16px;text-align:center;"><span style="font-size:40px;">${courseEmoji(c.course_name)}</span></div><div style="padding:16px;"><h3 style="margin:0 0 6px 0;font-size:16px;">${esc(c.course_name)}</h3><p style="color:#666;font-size:13px;margin:0 0 10px 0;">Instructor: ${esc(c.teacher)}</p><div style="display:flex;align-items:center;gap:6px;color:#888;font-size:12px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>${count} student${count!==1?'s':''} enrolled</div></div></div>`;
-    }));
-    grid.innerHTML = courseCards.join('');
+    _allCoursesCache = await api('/courses');
+    if (!_allCoursesCache.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="icon">📚</div><h3>No courses yet</h3><p>Admins can create courses.</p></div>`;
+      return;
+    }
+
+    _myEnrolledCache = new Set();
+    if (state.user && state.user.role === 'student') {
+      try {
+        const mc = await api('/my-courses');
+        (mc.courses || []).forEach(c => _myEnrolledCache.add(c.course_id));
+      } catch (_) {}
+    }
+
+    _courseCountsCache = {};
+    _courseNextDueCache = {};
+    for (const c of _allCoursesCache) {
+      try {
+        const roster = await api(`/courses/${c.course_id}/students`);
+        _courseCountsCache[c.course_id] = (roster.students || []).length;
+      } catch (_) { _courseCountsCache[c.course_id] = 0; }
+      try {
+        const data = await api(`/courses/${c.course_id}/assignments`);
+        const aList = data.assignments || data || [];
+        if (Array.isArray(aList)) {
+          const now = new Date(); now.setHours(0,0,0,0);
+          const upcoming = aList.filter(a => a.due_date && new Date(a.due_date) >= now).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+          if (upcoming.length) _courseNextDueCache[c.course_id] = upcoming[0];
+        }
+      } catch (_) {}
+    }
+
+    renderCourseCards(_allCoursesCache);
   } catch (e) { grid.innerHTML = `<p class="text-muted">${esc(e.message)}</p>`; }
 }
 
-let currentCourseId = null, currentCourseName = '', currentCourseTab = 'assignments';
+function filterCourses() {
+  const q = (document.getElementById('course-search').value || '').toLowerCase().trim();
+  if (!q) return renderCourseCards(_allCoursesCache);
+  const filtered = _allCoursesCache.filter(c =>
+    c.course_name.toLowerCase().includes(q) ||
+    (c.course_code || '').toLowerCase().includes(q) ||
+    c.teacher.toLowerCase().includes(q) ||
+    (c.description || '').toLowerCase().includes(q)
+  );
+  renderCourseCards(filtered);
+}
 
-function openCourseDetail(cid, name, teacher) {
-  currentCourseId = cid; currentCourseName = name;
+function renderCourseCards(data) {
+  const grid = document.getElementById('courses-grid');
+  if (!data.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>No courses found</h3><p>Try a different search.</p></div>`;
+    return;
+  }
+  const isStudent = state.user && state.user.role === 'student';
+  grid.innerHTML = data.map((c, idx) => {
+    const bgColor = c.color || ['#2d6a4f','#1d5fa8','#9b59b6','#e67e22','#c0392b','#1abc9c','#2c3e50','#8e44ad'][idx % 8];
+    const count = _courseCountsCache[c.course_id] || 0;
+    const code = c.course_code || '';
+    const desc = c.description || '';
+    const isEnrolled = _myEnrolledCache.has(c.course_id);
+    const enrollBtn = isStudent ? (isEnrolled
+      ? `<button class="btn btn-sm" style="background:var(--accent-bg);color:var(--accent);border-color:var(--accent-bg);font-size:11px;" onclick="event.stopPropagation();selfUnenroll(${c.course_id},this)" onmouseenter="this.textContent='Unenroll';this.style.background='var(--danger-bg)';this.style.color='var(--danger)';this.style.borderColor='#f0c4be'" onmouseleave="this.textContent='✓ Enrolled';this.style.background='var(--accent-bg)';this.style.color='var(--accent)';this.style.borderColor='var(--accent-bg)'">✓ Enrolled</button>`
+      : `<button class="btn btn-sm btn-primary" style="font-size:11px;" onclick="event.stopPropagation();selfEnroll(${c.course_id},this)">Enroll</button>`
+    ) : '';
+    return `
+    <div class="course-card" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')" style="padding:0;cursor:pointer;overflow:hidden;border-radius:var(--radius-lg);">
+      <div style="background:${bgColor};padding:28px 20px 24px;position:relative;overflow:hidden;min-height:110px;display:flex;flex-direction:column;justify-content:flex-end;">
+        <div style="position:absolute;inset:0;background-image:linear-gradient(135deg,rgba(255,255,255,.06) 25%,transparent 25%),linear-gradient(225deg,rgba(255,255,255,.06) 25%,transparent 25%),linear-gradient(45deg,rgba(255,255,255,.06) 25%,transparent 25%),linear-gradient(315deg,rgba(255,255,255,.06) 25%,transparent 25%);background-size:30px 30px;background-position:0 0,15px 0,15px -15px,0 15px;opacity:.3;"></div>
+        <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;">
+          ${count > 0 ? `<span style="background:rgba(0,0,0,.35);backdrop-filter:blur(4px);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;">${count} student${count !== 1 ? 's' : ''}</span>` : ''}
+        </div>
+        ${code ? `<div style="font-size:11px;color:rgba(255,255,255,.7);font-family:monospace;letter-spacing:.04em;margin-bottom:4px;position:relative;z-index:1;">${esc(code)}</div>` : ''}
+        <h3 style="margin:0;font-size:15px;font-weight:700;color:#fff;position:relative;z-index:1;text-transform:uppercase;letter-spacing:.03em;line-height:1.3;">${esc(c.course_name)}</h3>
+      </div>
+      <div style="padding:14px 20px 16px;">
+        ${desc ? `<p style="font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.4;">${esc(desc).substring(0, 80)}${desc.length > 80 ? '...' : ''}</p>` : ''}
+        ${(() => {
+          const nextDue = _courseNextDueCache[c.course_id];
+          if (nextDue) {
+            const due = new Date(nextDue.due_date);
+            const daysLeft = Math.ceil((due - new Date(new Date().setHours(0,0,0,0))) / 86400000);
+            const urgency = daysLeft <= 1 ? 'color:var(--danger)' : daysLeft <= 3 ? 'color:var(--warn)' : 'color:var(--muted)';
+            return `<div style="font-size:11px;${urgency};margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              ${esc(nextDue.title)} · ${daysLeft <= 0 ? 'Due today' : daysLeft === 1 ? 'Due tomorrow' : 'Due in ' + daysLeft + ' days'}
+            </div>`;
+          }
+          return '';
+        })()}
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:13px;color:var(--muted);">${esc(c.teacher)}</div>
+          ${enrollBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── COURSE DETAIL ─────────────────────────────────────────────────
+let currentCourseId = null;
+let currentCourseName = '';
+let currentCourseTab = 'assignments';
+
+function openCourseDetail(cid, name, teacher, tab) {
+  currentCourseId = cid;
+  currentCourseName = name;
+  currentCourseTab = tab || 'assignments';
   document.getElementById('cd-title').textContent = name;
   document.getElementById('cd-teacher').textContent = 'Instructor: ' + teacher;
   navigate('course-detail');
@@ -809,8 +1597,8 @@ function openCourseDetail(cid, name, teacher) {
 
 function loadCourseDetail() {
   const isAdmin = state.user.role === 'admin';
-  const isAT = ['admin','teacher'].includes(state.user.role);
-  document.querySelectorAll('#page-course-detail .admin-teacher-only').forEach(el => el.style.display = isAT ? '' : 'none');
+  const isAdminOrTeacher = ['admin', 'teacher'].includes(state.user.role);
+  document.querySelectorAll('#page-course-detail .admin-teacher-only').forEach(el => el.style.display = isAdminOrTeacher ? '' : 'none');
   document.querySelectorAll('#page-course-detail .admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
   document.getElementById('att-date').value = new Date().toISOString().split('T')[0];
   switchCourseTab(currentCourseTab);
@@ -818,12 +1606,288 @@ function loadCourseDetail() {
 
 function switchCourseTab(tab) {
   currentCourseTab = tab;
-  ['assignments','attendance','grades','roster'].forEach(t => { document.getElementById('cd-tab-'+t).style.display = t===tab?'':'none'; });
-  document.querySelectorAll('#page-course-detail .tabs button').forEach((b,i) => { b.classList.toggle('active', ['assignments','attendance','grades','roster'][i]===tab); });
-  if (tab==='assignments') loadCourseAssignments();
-  if (tab==='attendance') loadCourseAttendance();
-  if (tab==='grades') loadCourseGradesTab();
-  if (tab==='roster') loadCourseRoster();
+  ['assignments', 'attendance', 'grades', 'announcements', 'roster'].forEach(t => {
+    document.getElementById('cd-tab-' + t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#page-course-detail .tabs button').forEach((b, i) => {
+    b.classList.toggle('active', ['assignments', 'attendance', 'grades', 'announcements', 'roster'][i] === tab);
+  });
+  if (tab === 'assignments') loadCourseAssignments();
+  if (tab === 'attendance') loadCourseAttendance();
+  if (tab === 'grades') loadCourseGradesTab();
+  if (tab === 'announcements') loadCourseAnnouncements();
+  if (tab === 'roster') loadCourseRoster();
+}
+
+async function loadCourseAnnouncements() {
+  const list = document.getElementById('cd-announcements-list');
+  list.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
+  try {
+    const data = await api(`/courses/${currentCourseId}/announcements`);
+    const isAT = ['admin', 'teacher'].includes(state.user.role);
+    if (!data.length) {
+      list.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="icon">📢</div><h3>No announcements</h3><p>${isAT ? 'Post an announcement above.' : 'Nothing posted yet.'}</p></div>`;
+    } else {
+      list.innerHTML = data.map(a => {
+        const date = a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+        return `<div class="card" style="margin-bottom:12px;"><div class="card-body" style="padding:16px 20px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <strong style="font-size:15px;">${esc(a.title)}</strong>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">${esc(a.author)} · ${date}</div>
+            </div>
+            ${isAT ? `<button class="btn btn-sm btn-danger" style="font-size:11px;padding:3px 10px;" onclick="deleteAnnouncement(${a.id})">Delete</button>` : ''}
+          </div>
+          <p style="margin:10px 0 0;font-size:13px;color:var(--text);line-height:1.5;">${esc(a.body)}</p>
+        </div></div>`;
+      }).join('');
+    }
+  } catch (e) { list.innerHTML = `<p class="text-muted">${esc(e.message)}</p>`; }
+}
+
+async function postAnnouncement() {
+  const title = document.getElementById('ann-title').value.trim();
+  const body = document.getElementById('ann-body').value.trim();
+  if (!title || !body) return toast('Title and message are required.', 'error');
+  try {
+    await api(`/courses/${currentCourseId}/announcements?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`, { method: 'POST' });
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-body').value = '';
+    toast('Announcement posted!');
+    loadCourseAnnouncements();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Delete this announcement?')) return;
+  try {
+    await api(`/announcements/${id}`, { method: 'DELETE' });
+    toast('Announcement deleted!');
+    loadCourseAnnouncements();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadAnnouncementsPage() {
+  const feed = document.getElementById('announcements-feed');
+  feed.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
+  try {
+    const data = await api('/announcements/feed');
+    const isAT = ['admin', 'teacher'].includes(state.user.role);
+
+    if (!data.length) {
+      feed.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:48px;">
+        <div style="font-size:40px;margin-bottom:12px;opacity:.3;">📢</div>
+        <h3 style="font-family:'Instrument Serif',serif;font-size:18px;font-weight:400;margin-bottom:6px;">No announcements yet</h3>
+        <p class="text-muted text-sm">${isAT ? 'Go to a course to post one.' : 'Your teachers haven\'t posted any announcements.'}</p>
+      </div></div>`;
+      return;
+    }
+
+    feed.innerHTML = data.map(a => {
+      const date = a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+      return `<div class="card" style="margin-bottom:12px;"><div class="card-body" style="padding:18px 22px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:18px;">📢</span>
+          <div style="flex:1;">
+            <strong style="font-size:15px;">${esc(a.title)}</strong>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+              <span class="badge badge-info" style="font-size:10px;">${esc(a.course)}</span>
+              <span class="text-muted" style="font-size:11px;">${esc(a.author)} · ${date}</span>
+            </div>
+          </div>
+        </div>
+        <p style="margin:0;font-size:13px;color:var(--text);line-height:1.6;padding-left:28px;">${esc(a.body)}</p>
+      </div></div>`;
+    }).join('');
+  } catch (e) {
+    feed.innerHTML = `<div class="card"><div class="card-body text-muted" style="text-align:center;padding:32px;">${esc(e.message)}</div></div>`;
+  }
+}
+
+let _calMonth = new Date().getMonth();
+let _calYear = new Date().getFullYear();
+let _calAssignments = [];
+
+function calNavMonth(dir) {
+  _calMonth += dir;
+  if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+  if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+  renderCalendar();
+}
+
+function calGoToday() {
+  _calMonth = new Date().getMonth();
+  _calYear = new Date().getFullYear();
+  renderCalendar();
+}
+
+async function loadDeadlinesPage() {
+  document.getElementById('cal-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;"><div class="spinner"></div></div>`;
+  document.getElementById('cal-upcoming').innerHTML = '';
+
+  let myCourses = [];
+  try { const mc = await api('/my-courses'); myCourses = mc.courses || []; } catch (_) {}
+
+  _calAssignments = [];
+  const colors = ['#2d6a4f','#1d5fa8','#9b59b6','#e67e22','#c0392b','#1abc9c'];
+  for (const c of myCourses) {
+    try {
+      const data = await api(`/courses/${c.course_id}/assignments`);
+      const aList = data.assignments || data || [];
+      if (Array.isArray(aList)) {
+        aList.forEach(a => _calAssignments.push({
+          ...a,
+          course_id: c.course_id,
+          course_name: c.course_name,
+          course_teacher: c.teacher,
+          course_color: colors[myCourses.indexOf(c) % colors.length]
+        }));
+      }
+    } catch (_) {}
+  }
+
+  renderCalendar();
+  renderUpcomingList();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-month-label');
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent = `${months[_calMonth]} ${_calYear}`;
+
+  const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+  const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Build map of assignments by date
+  const dateMap = {};
+  _calAssignments.forEach(a => {
+    if (!a.due_date) return;
+    const d = new Date(a.due_date);
+    if (d.getMonth() === _calMonth && d.getFullYear() === _calYear) {
+      const key = d.getDate();
+      if (!dateMap[key]) dateMap[key] = [];
+      dateMap[key].push(a);
+    }
+  });
+
+  let html = '';
+  // Day headers
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+    html += `<div style="padding:10px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);">${d}</div>`;
+  });
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div style="padding:10px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);min-height:80px;background:var(--bg);opacity:.4;"></div>`;
+  }
+
+  // Day cells
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = today.getDate() === day && today.getMonth() === _calMonth && today.getFullYear() === _calYear;
+    const assignments = dateMap[day] || [];
+    const cellDate = new Date(_calYear, _calMonth, day);
+    const isPast = cellDate < today;
+
+    html += `<div style="padding:8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);min-height:80px;cursor:${assignments.length ? 'pointer' : 'default'};transition:background .1s;${isPast ? 'opacity:.45;' : ''}" ${assignments.length ? `onclick="showCalDay(${day})" onmouseenter="this.style.background='var(--accent-bg)'" onmouseleave="this.style.background=''"` : ''}>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:${isToday ? '700' : '400'};${isToday ? 'color:var(--surface);background:var(--accent);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;' : `color:${isPast ? 'var(--muted)' : 'var(--text)'};`}">${day}</span>
+        ${assignments.length > 0 ? `<span style="font-size:10px;color:var(--muted);">${assignments.length}</span>` : ''}
+      </div>
+      ${assignments.slice(0, 2).map(a => `
+        <div style="font-size:10px;padding:2px 6px;border-radius:4px;background:${a.course_color};color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;">${esc(a.title)}</div>
+      `).join('')}
+      ${assignments.length > 2 ? `<div style="font-size:10px;color:var(--muted);">+${assignments.length - 2} more</div>` : ''}
+    </div>`;
+  }
+
+  // Fill remaining cells
+  const totalCells = firstDay + daysInMonth;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 0; i < remaining; i++) {
+    html += `<div style="padding:10px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);min-height:80px;background:var(--bg);opacity:.4;"></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function showCalDay(day) {
+  const detail = document.getElementById('cal-upcoming');
+  const assignments = _calAssignments.filter(a => {
+    if (!a.due_date) return false;
+    const d = new Date(a.due_date);
+    return d.getDate() === day && d.getMonth() === _calMonth && d.getFullYear() === _calYear;
+  });
+
+  if (!assignments.length) return;
+
+  const dateStr = new Date(_calYear, _calMonth, day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  detail.innerHTML = `
+    <div class="section-title">${dateStr}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${assignments.map(a => `
+        <div class="card" style="cursor:pointer;" onclick="openCourseDetail(${a.course_id},'${esc(a.course_name)}','${esc(a.course_teacher)}')">
+          <div style="display:flex;align-items:stretch;">
+            <div style="width:5px;background:${a.course_color};flex-shrink:0;border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding:14px 18px;flex:1;">
+              <div style="font-weight:600;font-size:14px;margin-bottom:2px;">${esc(a.title)}</div>
+              <div class="text-muted text-sm">${esc(a.course_name)} · ${a.max_points} pts</div>
+              ${a.description ? `<p style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4;">${esc(a.description)}</p>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderUpcomingList() {
+  const wrap = document.getElementById('cal-upcoming');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const upcoming = _calAssignments.filter(a => a.due_date && new Date(a.due_date) >= now).sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).slice(0, 5);
+
+  if (!upcoming.length) {
+    wrap.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:28px;">
+      <div style="font-size:28px;margin-bottom:8px;opacity:.3;">🎉</div>
+      <h3 style="font-family:'Instrument Serif',serif;font-size:16px;font-weight:400;">All caught up!</h3>
+      <p class="text-muted text-sm">No upcoming deadlines.</p>
+    </div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="section-title">Coming up</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${upcoming.map(a => {
+        const due = new Date(a.due_date);
+        const daysLeft = Math.ceil((due - now) / 86400000);
+        let urgencyColor = 'var(--info)'; let urgencyBg = 'var(--info-bg)';
+        if (daysLeft <= 1) { urgencyColor = 'var(--danger)'; urgencyBg = 'var(--danger-bg)'; }
+        else if (daysLeft <= 3) { urgencyColor = 'var(--warn)'; urgencyBg = 'var(--warn-bg)'; }
+        const dateStr = due.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const urgencyText = daysLeft <= 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : daysLeft + ' days';
+        return `<div class="card" style="cursor:pointer;" onclick="openCourseDetail(${a.course_id},'${esc(a.course_name)}','${esc(a.course_teacher)}')">
+          <div style="display:flex;align-items:stretch;">
+            <div style="width:5px;background:${a.course_color};flex-shrink:0;border-radius:var(--radius-lg) 0 0 var(--radius-lg);"></div>
+            <div style="padding:12px 18px;flex:1;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-weight:600;font-size:13px;">${esc(a.title)}</div>
+                <div class="text-muted" style="font-size:11px;">${esc(a.course_name)}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px;color:var(--muted);">${dateStr}</div>
+                <span style="font-size:10px;font-weight:600;color:${urgencyColor};background:${urgencyBg};padding:1px 8px;border-radius:99px;">${urgencyText}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
 }
 
 async function loadCourseAssignments() {
@@ -832,9 +1896,58 @@ async function loadCourseAssignments() {
   try {
     const data = await api(`/courses/${currentCourseId}/assignments`);
     const assignments = data.assignments || [];
-    if (!assignments.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📝</div><h3>No assignments yet</h3></div></td></tr>`; return; }
-    const isAT = ['admin','teacher'].includes(state.user.role);
-    tbody.innerHTML = assignments.map((a,i) => { const isPast = new Date(a.due_date)<new Date(); return `<tr><td class="text-muted text-sm">${i+1}</td><td><strong>${esc(a.title)}</strong></td><td class="text-muted">${esc(a.description||'—')}</td><td>${a.max_points} pts</td><td><span class="badge ${isPast?'badge-warn':'badge-info'}">${a.due_date}</span></td>${isAT?`<td><button class="btn btn-sm btn-secondary" onclick="openGradeModal(${a.id},'${esc(a.title)}',${a.max_points})">Grade</button></td>`:'<td></td>'}</tr>`; }).join('');
+    if (!assignments.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📝</div><h3>No assignments yet</h3><p>Teachers can create assignments for this course.</p></div></td></tr>`;
+      return;
+    }
+    const isAT = ['admin', 'teacher'].includes(state.user.role);
+    const isStudent = state.user.role === 'student';
+
+    // For students, check submission status for each assignment
+    let submissionStatus = {};
+    if (isStudent) {
+      for (const a of assignments) {
+        try {
+          const sub = await api(`/assignments/${a.id}/my-submission`);
+          submissionStatus[a.id] = sub;
+        } catch (_) {}
+      }
+    }
+
+    tbody.innerHTML = assignments.map((a, i) => {
+      const due = new Date(a.due_date);
+      const isPast = due < new Date();
+      let actionBtn = '';
+      if (isAT) {
+        actionBtn = `<td>
+          <div class="actions">
+            <button class="btn btn-sm btn-secondary" onclick="viewSubmissions(${a.id},'${esc(a.title)}')">📥 Submissions</button>
+            <button class="btn btn-sm btn-secondary" onclick="openGradeModal(${a.id}, '${esc(a.title)}', ${a.max_points})">Grade</button>
+          </div>
+        </td>`;
+      } else if (isStudent) {
+        const sub = submissionStatus[a.id];
+        if (sub && sub.submitted) {
+          const statusBadge = sub.points_earned !== null
+            ? `<span class="badge badge-success">Graded: ${sub.points_earned}/${a.max_points}</span>`
+            : `<span class="badge badge-info">✓ Submitted</span>`;
+          actionBtn = `<td>${statusBadge}</td>`;
+        } else {
+          actionBtn = `<td><button class="btn btn-sm btn-primary" onclick="openSubmitModal(${a.id},'${esc(a.title)}')">Submit</button></td>`;
+        }
+      } else {
+        actionBtn = '<td></td>';
+      }
+      return `
+      <tr>
+        <td class="text-muted text-sm">${i + 1}</td>
+        <td><strong>${esc(a.title)}</strong></td>
+        <td class="text-muted">${esc(a.description || '—')}</td>
+        <td>${a.max_points} pts</td>
+        <td><span class="badge ${isPast ? 'badge-warn' : 'badge-info'}">${a.due_date}</span></td>
+        ${actionBtn}
+      </tr>`;
+    }).join('');
   } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
@@ -857,15 +1970,104 @@ async function saveAssignment() {
   if (!due) return alertEl.innerHTML = `<div class="alert alert-error">Due date is required.</div>`;
   try {
     await api(`/courses/${currentCourseId}/assignments?title=${encodeURIComponent(title)}&description=${encodeURIComponent(desc)}&max_points=${points}&due_date=${due}`, { method: 'POST' });
-    closeModal('modal-assignment'); toast('Assignment created!'); loadCourseAssignments();
+    closeModal('modal-assignment');
+    toast('Assignment created!');
+    loadCourseAssignments();
   } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
 }
 
-let currentGradeAssignmentId = null, currentGradeMaxPoints = 100;
+function openSubmitModal(assignmentId, title) {
+  document.getElementById('submit-assignment-id').value = assignmentId;
+  document.getElementById('submit-modal-title').textContent = `Submit: ${title}`;
+  document.getElementById('submit-content').value = '';
+  document.getElementById('submit-file').value = '';
+  document.getElementById('submit-alert').innerHTML = '';
+  openModal('modal-submit-assignment');
+}
+
+async function submitAssignment() {
+  const assignmentId = document.getElementById('submit-assignment-id').value;
+  const content = document.getElementById('submit-content').value.trim();
+  const fileInput = document.getElementById('submit-file');
+  const alertEl = document.getElementById('submit-alert');
+
+  if (!content && !fileInput.files.length) {
+    return alertEl.innerHTML = `<div class="alert alert-error">Please write a response or attach a file.</div>`;
+  }
+
+  let body = { content };
+
+  if (fileInput.files.length) {
+    const file = fileInput.files[0];
+    if (file.size > 10 * 1024 * 1024) {
+      return alertEl.innerHTML = `<div class="alert alert-error">File must be under 10MB.</div>`;
+    }
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+    body.file_name = file.name;
+    body.file_data = base64;
+  }
+
+  try {
+    const res = await fetch(`${API}/assignments/${assignmentId}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Submission failed');
+    closeModal('modal-submit-assignment');
+    toast(data.message);
+    loadCourseAssignments();
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+}
+
+async function viewSubmissions(assignmentId, title) {
+  document.getElementById('view-subs-title').textContent = `Submissions: ${title}`;
+  const body = document.getElementById('view-subs-body');
+  body.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
+  openModal('modal-view-submissions');
+  try {
+    const data = await api(`/assignments/${assignmentId}/submissions`);
+    const subs = data.submissions || [];
+    if (!subs.length) {
+      body.innerHTML = `<div style="text-align:center;padding:24px;"><div style="font-size:28px;margin-bottom:8px;opacity:.3;">📭</div><p class="text-muted text-sm">No submissions yet.</p></div>`;
+      return;
+    }
+    body.innerHTML = subs.map(s => {
+      const date = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+      const statusBadge = s.points_earned !== null
+        ? `<span class="badge badge-success">Graded: ${s.points_earned}</span>`
+        : `<span class="badge badge-info">Pending</span>`;
+      return `<div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong style="font-size:14px;">${esc(s.student_name)}</strong>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${statusBadge}
+            <span class="text-muted" style="font-size:11px;">${date}</span>
+          </div>
+        </div>
+        ${s.content ? `<p style="font-size:13px;color:var(--text);margin:4px 0;line-height:1.4;background:var(--bg);padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);">${esc(s.content)}</p>` : ''}
+        ${s.file_name ? `<div style="margin-top:6px;font-size:12px;color:var(--accent);display:flex;align-items:center;gap:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          ${esc(s.file_name)}
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) { body.innerHTML = `<p class="text-muted" style="text-align:center;padding:20px;">${esc(e.message)}</p>`; }
+}
+
+let currentGradeAssignmentId = null;
+let currentGradeMaxPoints = 100;
 
 function openGradeModal(assignmentId, title, maxPoints) {
-  currentGradeAssignmentId = assignmentId; currentGradeMaxPoints = maxPoints;
-  document.getElementById('modal-grade-title').textContent = 'Grade: '+title+' ('+maxPoints+' pts)';
+  currentGradeAssignmentId = assignmentId;
+  currentGradeMaxPoints = maxPoints;
+  document.getElementById('modal-grade-title').textContent = 'Grade: ' + title + ' (' + maxPoints + ' pts)';
   document.getElementById('modal-grade-points').value = '';
   document.getElementById('modal-grade-points').max = maxPoints;
   document.getElementById('modal-grade-alert').innerHTML = '';
@@ -874,7 +2076,9 @@ function openGradeModal(assignmentId, title, maxPoints) {
   openModal('modal-grade');
   api(`/courses/${currentCourseId}/students`).then(data => {
     const students = data.students || [];
-    sel.innerHTML = students.length ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('') : '<option value="">No students enrolled</option>';
+    sel.innerHTML = students.length
+      ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('')
+      : '<option value="">No students enrolled</option>';
   });
 }
 
@@ -883,27 +2087,102 @@ async function submitGrade() {
   const points = document.getElementById('modal-grade-points').value;
   const alertEl = document.getElementById('modal-grade-alert');
   if (!sid) return alertEl.innerHTML = `<div class="alert alert-error">Select a student.</div>`;
-  if (points===''||+points<0||+points>currentGradeMaxPoints) return alertEl.innerHTML = `<div class="alert alert-error">Points must be 0–${currentGradeMaxPoints}.</div>`;
-  try { await api(`/assignments/${currentGradeAssignmentId}/grade?student_id=${sid}&points_earned=${points}`, { method: 'POST' }); closeModal('modal-grade'); toast('Grade saved!'); } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+  if (points === '' || +points < 0 || +points > currentGradeMaxPoints) return alertEl.innerHTML = `<div class="alert alert-error">Points must be 0–${currentGradeMaxPoints}.</div>`;
+  try {
+    await api(`/assignments/${currentGradeAssignmentId}/grade?student_id=${sid}&points_earned=${points}`, { method: 'POST' });
+    closeModal('modal-grade');
+    toast('Grade saved!');
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
 }
 
 async function loadCourseAttendance() {
   const tbody = document.getElementById('cd-attendance-body');
   const historyBody = document.getElementById('cd-attendance-history');
-  tbody.innerHTML = `<tr><td colspan="3" class="loading-row"><div class="spinner"></div></td></tr>`;
+  const studentView = document.getElementById('cd-attendance-student-view');
+  const isAT = ['admin', 'teacher'].includes(state.user.role);
+
+  if (isAT) {
+    tbody.innerHTML = `<tr><td colspan="3" class="loading-row"><div class="spinner"></div></td></tr>`;
+  }
   historyBody.innerHTML = `<tr><td colspan="4" class="loading-row"><div class="spinner"></div></td></tr>`;
-  const isAT = ['admin','teacher'].includes(state.user.role);
-  try {
-    const roster = await api(`/courses/${currentCourseId}/students`);
-    const students = roster.students || [];
-    if (!students.length) { tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3></div></td></tr>`; }
-    else { tbody.innerHTML = students.map((s,i) => `<tr><td class="text-muted text-sm">${i+1}</td><td><strong>${esc(s.name)}</strong></td><td>${isAT?`<select class="filter-select att-status-select" data-student-id="${s.student_id}" style="padding:5px 10px;font-size:13px;"><option value="present">✅ Present</option><option value="late">⏰ Late</option><option value="absent">❌ Absent</option></select>`:'—'}</td></tr>`).join(''); }
-  } catch (e) { tbody.innerHTML = `<tr><td colspan="3" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+
+  // Load roster for marking (admin/teacher only)
+  if (isAT) {
+    try {
+      const roster = await api(`/courses/${currentCourseId}/students`);
+      const students = roster.students || [];
+      if (!students.length) {
+        tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3><p>Enroll students first to mark attendance.</p></div></td></tr>`;
+      } else {
+        tbody.innerHTML = students.map((s, i) => `
+          <tr>
+            <td class="text-muted text-sm">${i + 1}</td>
+            <td><strong>${esc(s.name)}</strong></td>
+            <td>
+              <select class="filter-select att-status-select" data-student-id="${s.student_id}" style="padding:5px 10px;font-size:13px;">
+                <option value="present">✅ Present</option>
+                <option value="late">⏰ Late</option>
+                <option value="absent">❌ Absent</option>
+              </select>
+            </td>
+          </tr>`).join('');
+      }
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="3" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
+  }
+
+  // Load attendance history
   try {
     const data = await api(`/courses/${currentCourseId}/attendance`);
     const records = data.attendance || [];
-    if (!records.length) { historyBody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No attendance records yet.</td></tr>`; }
-    else { historyBody.innerHTML = records.map((r,i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(r.student_name)}</td><td>${r.date}</td><td><span class="badge ${r.status==='present'?'badge-success':r.status==='late'?'badge-warn':'badge-danger'}">${r.status}</span></td></tr>`).join(''); }
+
+    if (!isAT && records.length) {
+      // Student view — show summary + timeline
+      const present = records.filter(r => r.status === 'present').length;
+      const late = records.filter(r => r.status === 'late').length;
+      const absent = records.filter(r => r.status === 'absent').length;
+      const total = records.length;
+      const pct = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+
+      document.getElementById('att-history-title').textContent = 'My attendance';
+      studentView.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
+          <div class="card"><div class="card-body" style="text-align:center;padding:14px;">
+            <div style="font-size:24px;font-weight:700;color:var(--accent);">${pct}%</div>
+            <div class="text-muted text-sm">Attendance</div>
+          </div></div>
+          <div class="card"><div class="card-body" style="text-align:center;padding:14px;">
+            <div style="font-size:24px;font-weight:700;color:var(--accent);">${present}</div>
+            <div class="text-muted text-sm">Present</div>
+          </div></div>
+          <div class="card"><div class="card-body" style="text-align:center;padding:14px;">
+            <div style="font-size:24px;font-weight:700;color:var(--warn);">${late}</div>
+            <div class="text-muted text-sm">Late</div>
+          </div></div>
+          <div class="card"><div class="card-body" style="text-align:center;padding:14px;">
+            <div style="font-size:24px;font-weight:700;color:var(--danger);">${absent}</div>
+            <div class="text-muted text-sm">Absent</div>
+          </div></div>
+        </div>
+      `;
+    } else {
+      studentView.innerHTML = '';
+    }
+
+    if (!records.length) {
+      historyBody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No attendance records yet.</td></tr>`;
+    } else {
+      const sorted = records.sort((a, b) => new Date(b.date) - new Date(a.date));
+      historyBody.innerHTML = sorted.map((r, i) => {
+        const statusIcon = r.status === 'present' ? '✅' : r.status === 'late' ? '⏰' : '❌';
+        const badgeClass = r.status === 'present' ? 'badge-success' : r.status === 'late' ? 'badge-warn' : 'badge-danger';
+        return `<tr>
+          <td class="text-muted text-sm">${i + 1}</td>
+          <td>${isAT ? esc(r.student_name) : '<strong>You</strong>'}</td>
+          <td>${new Date(r.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+          <td><span class="badge ${badgeClass}">${statusIcon} ${r.status}</span></td>
+        </tr>`;
+      }).join('');
+    }
   } catch (e) { historyBody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
@@ -912,15 +2191,29 @@ async function submitBulkAttendance() {
   if (!attDate) return toast('Please select a date.', 'error');
   const selects = document.querySelectorAll('.att-status-select');
   const records = [];
-  selects.forEach(sel => { records.push({ student_id: parseInt(sel.dataset.studentId), status: sel.value }); });
+  selects.forEach(sel => {
+    records.push({
+      student_id: parseInt(sel.dataset.studentId),
+      status: sel.value
+    });
+  });
   if (!records.length) return toast('No students to mark.', 'error');
   try {
     const res = await fetch(API + `/courses/${currentCourseId}/attendance/bulk`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.accessToken },
-      body: JSON.stringify({ attendance_date: attDate, records: records })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + state.accessToken
+      },
+      body: JSON.stringify({
+        attendance_date: attDate,
+        records: records
+      })
     });
-    if (!res.ok) { const err = await res.json().catch(() => ({ detail: 'Failed' })); throw new Error(err.detail); }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Request failed' }));
+      throw new Error(err.detail || 'Error');
+    }
     const data = await res.json();
     toast(data.message || 'Attendance submitted!');
     loadCourseAttendance();
@@ -932,8 +2225,15 @@ async function loadCourseGradesTab() {
   try {
     const roster = await api(`/courses/${currentCourseId}/students`);
     const students = roster.students || [];
-    if (state.user.role === 'student') { sel.parentElement.style.display = 'none'; loadCourseGrades(); }
-    else { sel.innerHTML = students.length ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('') : '<option value="">No students</option>'; if (students.length) loadCourseGrades(); }
+    if (state.user.role === 'student') {
+      sel.parentElement.style.display = 'none';
+      loadCourseGrades();
+    } else {
+      sel.innerHTML = students.length
+        ? students.map(s => `<option value="${s.student_id}">${esc(s.name)}</option>`).join('')
+        : '<option value="">No students</option>';
+      if (students.length) loadCourseGrades();
+    }
   } catch (_) {}
 }
 
@@ -942,14 +2242,31 @@ async function loadCourseGrades() {
   const avgEl = document.getElementById('grades-average');
   tbody.innerHTML = `<tr><td colspan="4" class="loading-row"><div class="spinner"></div></td></tr>`;
   let url = `/courses/${currentCourseId}/grades`;
-  if (state.user.role !== 'student') { const sid = document.getElementById('grades-student').value; if (!sid) return; url += `?student_id=${sid}`; }
+  if (state.user.role !== 'student') {
+    const sid = document.getElementById('grades-student').value;
+    if (!sid) return;
+    url += `?student_id=${sid}`;
+  }
   try {
     const data = await api(url);
-    const grades = data.grades || [], avg = data.average || 0;
-    const letter = avg>=93?'A':avg>=90?'A-':avg>=87?'B+':avg>=83?'B':avg>=80?'B-':avg>=77?'C+':avg>=73?'C':avg>=70?'C-':avg>=60?'D':'F';
-    avgEl.innerHTML = avg>0?`<span class="badge ${avg>=70?'badge-success':avg>=50?'badge-warn':'badge-danger'}" style="font-size:18px;padding:6px 14px;">${letter} ${avg}%</span>`:'<span class="text-muted">No grades yet</span>';
-    if (!grades.length) { tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div><h3>No assignments graded</h3></div></td></tr>`; return; }
-    tbody.innerHTML = grades.map(g => { const pct = g.points_earned!==null?Math.round((g.points_earned/g.max_points)*100):null; return `<tr><td><strong>${esc(g.assignment)}</strong></td><td class="text-muted">${g.due_date}</td><td>${g.points_earned!==null?g.points_earned+'/'+g.max_points:'<span class="text-muted">Not graded</span>'}</td><td>${pct!==null?`<span class="badge ${pct>=70?'badge-success':pct>=50?'badge-warn':'badge-danger'}">${pct}%</span>`:'—'}</td></tr>`; }).join('');
+    const grades = data.grades || [];
+    const avg = data.average || 0;
+    const letter = avg >= 93 ? 'A' : avg >= 90 ? 'A-' : avg >= 87 ? 'B+' : avg >= 83 ? 'B' : avg >= 80 ? 'B-' : avg >= 77 ? 'C+' : avg >= 73 ? 'C' : avg >= 70 ? 'C-' : avg >= 60 ? 'D' : 'F';
+    avgEl.innerHTML = avg > 0 ? `<span class="badge ${avg >= 70 ? 'badge-success' : avg >= 50 ? 'badge-warn' : 'badge-danger'}" style="font-size:18px;padding:6px 14px;">${letter} ${avg}%</span>` : '<span class="text-muted">No grades yet</span>';
+    if (!grades.length) {
+      tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="icon">📊</div><h3>No assignments graded</h3></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = grades.map(g => {
+      const pct = g.points_earned !== null ? Math.round((g.points_earned / g.max_points) * 100) : null;
+      return `
+      <tr>
+        <td><strong>${esc(g.assignment)}</strong></td>
+        <td class="text-muted">${g.due_date}</td>
+        <td>${g.points_earned !== null ? g.points_earned + '/' + g.max_points : '<span class="text-muted">Not graded</span>'}</td>
+        <td>${pct !== null ? `<span class="badge ${pct >= 70 ? 'badge-success' : pct >= 50 ? 'badge-warn' : 'badge-danger'}">${pct}%</span>` : '—'}</td>
+      </tr>`;
+    }).join('');
   } catch (e) { tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
@@ -959,62 +2276,132 @@ async function loadCourseRoster() {
   try {
     const data = await api(`/courses/${currentCourseId}/students`);
     const students = data.students || [];
-    if (!students.length) { tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3></div></td></tr>`; return; }
-    tbody.innerHTML = students.map((s,i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('');
+    if (!students.length) {
+      tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><div class="icon">👥</div><h3>No students enrolled</h3></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = students.map((s, i) => `
+      <tr>
+        <td class="text-muted text-sm">${i + 1}</td>
+        <td>${esc(s.name)}</td>
+      </tr>`).join('');
   } catch (e) { tbody.innerHTML = `<tr><td colspan="2" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
 async function openCourseModal() {
   document.getElementById('modal-course-name').value = '';
+  document.getElementById('modal-course-code').value = '';
+  document.getElementById('modal-course-desc').value = '';
+  document.getElementById('modal-course-color').value = '#2d6a4f';
   document.getElementById('modal-course-alert').innerHTML = '';
   const sel = document.getElementById('modal-teacher-select');
   sel.innerHTML = '<option value="">Loading teachers…</option>';
   openModal('modal-course');
-  try { const users = await api('/users?role=teacher'); sel.innerHTML = users.length ? users.map(u => `<option value="${u.user_id}">${esc(u.username)}</option>`).join('') : '<option value="">No teachers found</option>'; } catch (e) { sel.innerHTML = '<option value="">Failed to load</option>'; }
+  try {
+    const users = await api('/users?role=teacher');
+    sel.innerHTML = users.length
+      ? users.map(u => `<option value="${u.user_id}">${esc(u.username)}</option>`).join('')
+      : '<option value="">No teachers found</option>';
+  } catch (e) { sel.innerHTML = '<option value="">Failed to load</option>'; }
 }
 
 async function saveCourse() {
   const name = document.getElementById('modal-course-name').value.trim();
-  const tid = document.getElementById('modal-teacher-select').value;
+  const code = document.getElementById('modal-course-code').value.trim();
+  const desc = document.getElementById('modal-course-desc').value.trim();
+  const color = document.getElementById('modal-course-color').value;
+  const tid  = document.getElementById('modal-teacher-select').value;
   const alertEl = document.getElementById('modal-course-alert');
   if (!name) return alertEl.innerHTML = `<div class="alert alert-error">Course name is required.</div>`;
-  if (!tid) return alertEl.innerHTML = `<div class="alert alert-error">Select a teacher.</div>`;
-  try { await api(`/courses?course_name=${encodeURIComponent(name)}&teacher_id=${tid}`, { method: 'POST' }); closeModal('modal-course'); toast('Course created!'); loadCourses(); } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+  if (!tid)  return alertEl.innerHTML = `<div class="alert alert-error">Select a teacher.</div>`;
+  try {
+    let params = `?course_name=${encodeURIComponent(name)}&teacher_id=${tid}`;
+    if (code) params += `&course_code=${encodeURIComponent(code)}`;
+    if (desc) params += `&description=${encodeURIComponent(desc)}`;
+    if (color) params += `&color=${encodeURIComponent(color)}`;
+    await api(`/courses${params}`, { method: 'POST' });
+    closeModal('modal-course');
+    toast('Course created!');
+    loadCourses();
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
 }
 
+// ── ENROLL ────────────────────────────────────────────────────────
 async function loadEnroll() {
   const [courses, students] = await Promise.all([api('/courses'), api('/students')]);
-  document.getElementById('enroll-course').innerHTML = courses.map(c => `<option value="${c.course_id}">${esc(c.course_name)} — ${esc(c.teacher)}</option>`).join('');
-  document.getElementById('enroll-student').innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
-  document.getElementById('enroll-course').onchange = loadEnrollClassmates;
+  const cSel = document.getElementById('enroll-course');
+  const sSel = document.getElementById('enroll-student');
+  cSel.innerHTML = courses.map(c => `<option value="${c.course_id}">${esc(c.course_name)} — ${esc(c.teacher)}</option>`).join('');
+  sSel.innerHTML = students.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  cSel.onchange = loadEnrollClassmates;
   loadEnrollClassmates();
 }
 
 async function loadEnrollClassmates() {
   const cid = document.getElementById('enroll-course').value;
   if (!cid) return;
-  document.getElementById('enroll-classmates-wrap').style.display = 'block';
-  try { const data = await api(`/courses/${cid}/students`); document.getElementById('enroll-classmates').innerHTML = (data.students||[]).length ? data.students.map((s,i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('') : `<tr><td colspan="2" class="loading-row text-muted">No students yet.</td></tr>`; } catch (_) {}
+  const wrap = document.getElementById('enroll-classmates-wrap');
+  const tbody = document.getElementById('enroll-classmates');
+  wrap.style.display = 'block';
+  try {
+    const data = await api(`/courses/${cid}/students`);
+    tbody.innerHTML = (data.students || []).length
+      ? data.students.map((s, i) => `<tr><td class="text-muted text-sm">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('')
+      : `<tr><td colspan="2" class="loading-row text-muted">No students yet.</td></tr>`;
+  } catch (_) {}
 }
 
 async function doEnroll() {
-  const cid = document.getElementById('enroll-course').value, sid = document.getElementById('enroll-student').value;
+  const cid = document.getElementById('enroll-course').value;
+  const sid = document.getElementById('enroll-student').value;
   const alertEl = document.getElementById('enroll-alert');
-  try { const data = await api(`/courses/${cid}/enroll?student_id=${sid}`, { method: 'POST' }); alertEl.innerHTML = `<div class="alert alert-success">${esc(data.message)}</div>`; toast('Enrolled!'); loadEnrollClassmates(); } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
+  try {
+    const data = await api(`/courses/${cid}/enroll?student_id=${sid}`, { method: 'POST' });
+    alertEl.innerHTML = `<div class="alert alert-success">${esc(data.message)}</div>`;
+    toast('Enrolled!');
+    loadEnrollClassmates();
+  } catch (e) { alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`; }
 }
 
+// ── MY COURSES ────────────────────────────────────────────────────
 async function loadMyCourses() {
   const wrap = document.getElementById('my-courses-content');
   wrap.innerHTML = `<div class="loading-row"><div class="spinner"></div></div>`;
   try {
     const data = await api('/my-courses');
     const courses = data.courses || [];
-    if (!courses.length) { wrap.innerHTML = `<div class="empty-state"><div class="icon">📖</div><h3>No courses yet</h3><p>You haven't been enrolled in any courses.</p></div>`; return; }
-    const mGrads = ['linear-gradient(135deg,#667eea 0%,#764ba2 100%)','linear-gradient(135deg,#f093fb 0%,#f5576c 100%)','linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)','linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)','linear-gradient(135deg,#fa709a 0%,#fee140 100%)','linear-gradient(135deg,#a18cd1 0%,#fbc2eb 100%)'];
-    wrap.innerHTML = `<p class="text-muted text-sm" style="margin-bottom:16px">Enrolled as: <strong>${esc(data.student)}</strong></p><div class="course-grid">${courses.map((c,idx) => `<div class="course-card" style="cursor:pointer;overflow:hidden;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:transform 0.2s,box-shadow 0.2s;padding:0;" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')" onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'" onmouseleave="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'"><div style="background:${mGrads[idx%mGrads.length]};padding:24px 16px;text-align:center;"><span style="font-size:40px;">${courseEmoji(c.course_name)}</span></div><div style="padding:16px;"><h3 style="margin:0 0 6px 0;font-size:16px;">${esc(c.course_name)}</h3><p style="color:#666;font-size:13px;margin:0;">Instructor: ${esc(c.teacher)}</p></div></div>`).join('')}</div>`;
-  } catch (e) { wrap.innerHTML = `<div class="empty-state"><div class="icon">📖</div><h3>No student profile found</h3><p>${esc(e.message)}</p></div>`; }
+    if (!courses.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="icon">📖</div><h3>No courses yet</h3><p>You haven't been enrolled in any courses.</p></div>`;
+      return;
+    }
+    const cardColors = ['#2d6a4f','#1d5fa8','#9b59b6','#e67e22','#c0392b','#1abc9c'];
+    wrap.innerHTML = `
+      <p class="text-muted text-sm" style="margin-bottom:16px">Enrolled as: <strong>${esc(data.student)}</strong></p>
+      <div class="course-grid">${courses.map((c, idx) => {
+        const clr = cardColors[idx % cardColors.length];
+        return `
+        <div class="course-card" onclick="openCourseDetail(${c.course_id},'${esc(c.course_name)}','${esc(c.teacher)}')" style="padding:0;cursor:pointer;overflow:hidden;border-radius:var(--radius-lg);">
+          <div style="background:${clr};padding:28px 20px 24px;position:relative;overflow:hidden;min-height:100px;display:flex;flex-direction:column;justify-content:flex-end;">
+            <div style="position:absolute;inset:0;background-image:
+              linear-gradient(135deg, rgba(255,255,255,.06) 25%, transparent 25%),
+              linear-gradient(225deg, rgba(255,255,255,.06) 25%, transparent 25%),
+              linear-gradient(45deg, rgba(255,255,255,.06) 25%, transparent 25%),
+              linear-gradient(315deg, rgba(255,255,255,.06) 25%, transparent 25%);
+              background-size:30px 30px;background-position:0 0,15px 0,15px -15px,0 15px;opacity:.3;"></div>
+            <h3 style="margin:0;font-size:15px;font-weight:700;color:#fff;position:relative;z-index:1;text-transform:uppercase;letter-spacing:.03em;line-height:1.3;">${esc(c.course_name)}</h3>
+          </div>
+          <div style="padding:12px 20px 14px;">
+            <div style="font-size:13px;color:var(--muted);">${esc(c.teacher)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+      </div>`;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">📖</div><h3>No student profile found</h3><p>${esc(e.message)}</p></div>`;
+  }
 }
 
+// ── USERS ─────────────────────────────────────────────────────────
 async function loadUsers() {
   const role = document.getElementById('user-role-filter').value;
   const tbody = document.getElementById('users-body');
@@ -1022,46 +2409,244 @@ async function loadUsers() {
   try {
     const url = role ? `/users?role=${role}` : '/users';
     const data = await api(url);
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No users found.</td></tr>`; return; }
-    tbody.innerHTML = data.map((u,i) => `<tr><td class="text-muted text-sm">${i+1}</td><td><strong>${esc(u.username)}</strong></td><td><span class="badge ${u.role==='admin'?'badge-warn':u.role==='teacher'?'badge-info':'badge-success'}">${u.role}</span></td><td><select class="filter-select" style="padding:5px 10px;font-size:12px" onchange="changeRole(${u.user_id},this.value,this)"><option value="student" ${u.role==='student'?'selected':''}>Student</option><option value="teacher" ${u.role==='teacher'?'selected':''}>Teacher</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td></tr>`).join('');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">No users found.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map((u, i) => `
+      <tr>
+        <td class="text-muted text-sm">${i + 1}</td>
+        <td><strong>${esc(u.username)}</strong></td>
+        <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : u.role === 'teacher' ? 'badge-info' : 'badge-success'}">${u.role}</span></td>
+        <td>
+          <select class="filter-select" style="padding:5px 10px;font-size:12px" onchange="changeRole(${u.user_id}, this.value, this)">
+            <option value="student" ${u.role==='student'?'selected':''}>Student</option>
+            <option value="teacher" ${u.role==='teacher'?'selected':''}>Teacher</option>
+            <option value="admin"   ${u.role==='admin'?'selected':''}>Admin</option>
+          </select>
+        </td>
+      </tr>`).join('');
   } catch (e) { tbody.innerHTML = `<tr><td colspan="4" class="loading-row text-muted">${esc(e.message)}</td></tr>`; }
 }
 
 let pendingRoleChange = { uid: null, newRole: '', sel: null };
-function changeRole(uid, newRole, sel) {
-  pendingRoleChange = { uid, newRole, sel };
+
+async function changeRole(uid, newRole, sel) {
+  pendingRoleChange = { uid, newRole, sel, oldRole: sel.dataset.orig || sel.options[sel.selectedIndex].text };
   const username = sel.closest('tr').querySelector('strong').textContent;
   document.getElementById('role-confirm-msg').innerHTML = `Are you sure you want to change <strong>${username}</strong>'s role to <strong>${newRole}</strong>?`;
   openModal('modal-role');
 }
-function cancelRoleChange() { loadUsers(); closeModal('modal-role'); pendingRoleChange = { uid: null, newRole: '', sel: null }; }
-async function confirmRoleChange() {
-  const { uid, newRole } = pendingRoleChange; closeModal('modal-role');
-  try { const data = await api(`/users/${uid}/role?new_role=${newRole}`, { method: 'PUT' }); toast(data.message || 'Role updated!'); loadUsers(); } catch (e) { toast(e.message, 'error'); loadUsers(); }
+
+function cancelRoleChange() {
+  if (pendingRoleChange.sel) {
+    loadUsers();
+  }
+  closeModal('modal-role');
   pendingRoleChange = { uid: null, newRole: '', sel: null };
 }
 
-function loadProfile() {
-  const u = state.user; if (!u) return;
+async function confirmRoleChange() {
+  const { uid, newRole } = pendingRoleChange;
+  closeModal('modal-role');
+  try {
+    const data = await api(`/users/${uid}/role?new_role=${newRole}`, { method: 'PUT' });
+    toast(data.message || 'Role updated!');
+    loadUsers();
+  } catch (e) { toast(e.message, 'error'); loadUsers(); }
+  pendingRoleChange = { uid: null, newRole: '', sel: null };
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────
+async function loadProfile() {
+  const u = state.user;
+  if (!u) return;
   document.getElementById('profile-avatar').textContent = u.username[0].toUpperCase();
   document.getElementById('profile-username').textContent = u.username;
   document.getElementById('profile-role').innerHTML = `<span class="badge ${u.role==='admin'?'badge-warn':u.role==='teacher'?'badge-info':'badge-success'}">${u.role}</span>`;
+
+  updateThemeBtns(localStorage.getItem('edu-theme') || 'light');
+
+  try {
+    const p = await api('/my-profile');
+    document.getElementById('profile-email').textContent = p.email || '—';
+    document.getElementById('profile-banner').textContent = p.banner_id || '—';
+    document.getElementById('profile-verified').innerHTML = p.is_verified
+      ? '<span class="badge badge-success">✓ Verified</span>'
+      : '<span class="badge badge-warn">✗ Unverified</span>';
+    document.getElementById('profile-joined').textContent = p.created_at
+      ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '—';
+
+    if (p.student_id) {
+      document.getElementById('profile-edit-card').style.display = 'block';
+      document.getElementById('profile-major').value = p.major || '';
+      document.getElementById('profile-year').value = p.year || '';
+      document.getElementById('profile-phone').value = p.phone || '';
+    }
+
+    if (p.enrolled_courses && p.enrolled_courses.length) {
+      document.getElementById('profile-courses-card').style.display = 'block';
+      document.getElementById('profile-courses-title').textContent = `My courses (${p.enrolled_courses.length})`;
+      document.getElementById('profile-courses-list').innerHTML = p.enrolled_courses.map(c => `
+        <div style="display:flex;align-items:center;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:8px;">
+          <div>
+            <div style="font-weight:500;font-size:14px;">${courseEmoji(c.course_name)} ${esc(c.course_name)}</div>
+            <div class="text-muted text-sm">Instructor: ${esc(c.teacher)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (_) {}
 }
 
+async function saveMyProfile() {
+  const major = document.getElementById('profile-major').value.trim();
+  const year = document.getElementById('profile-year').value;
+  const phone = document.getElementById('profile-phone').value.trim();
+  const alertEl = document.getElementById('profile-alert');
+  try {
+    let params = '?';
+    if (major) params += `major=${encodeURIComponent(major)}&`;
+    if (year) params += `year=${encodeURIComponent(year)}&`;
+    if (phone) params += `phone=${encodeURIComponent(phone)}&`;
+    await api(`/my-profile${params}`, { method: 'PUT' });
+    toast('Profile updated!');
+    alertEl.innerHTML = '';
+  } catch (e) {
+    alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+  }
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }); });
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function gradeBadge(g) { if (g>=90) return `<span class="badge badge-success">${g}</span>`; if (g>=70) return `<span class="badge badge-info">${g}</span>`; if (g>=50) return `<span class="badge badge-warn">${g}</span>`; return `<span class="badge badge-danger">${g}</span>`; }
+// ── UTILS ─────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function gradeBadge(g) {
+  if (g >= 90) return `<span class="badge badge-success">${g}</span>`;
+  if (g >= 70) return `<span class="badge badge-info">${g}</span>`;
+  if (g >= 50) return `<span class="badge badge-warn">${g}</span>`;
+  return `<span class="badge badge-danger">${g}</span>`;
+}
 
-(async function boot() {
-  const token = new URLSearchParams(window.location.search).get('token');
-  if (token) {
-    try { await api(`/verify?token=${encodeURIComponent(token)}`); window.history.replaceState({}, document.title, window.location.pathname); switchTab('login'); authAlert('Email verified successfully! You can now sign in.', 'success'); }
-    catch (e) { window.history.replaceState({}, document.title, window.location.pathname); switchTab('login'); authAlert('Verification failed or link expired.', 'error'); }
+// ── THEME ─────────────────────────────────────────────────────────
+function setTheme(mode) {
+  localStorage.setItem('edu-theme', mode);
+  applyTheme(mode);
+  updateThemeBtns(mode);
+  const note = document.getElementById('theme-note');
+  if (note) {
+    if (mode === 'system') {
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      note.textContent = `Your system is set to ${sys} mode`;
+    } else {
+      note.textContent = '';
+    }
   }
-  if (state.accessToken) { document.getElementById('auth-screen').style.display = 'none'; await initApp(); }
+}
+
+function applyTheme(mode) {
+  let theme = mode;
+  if (mode === 'system') {
+    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
+}
+
+function updateThemeBtns(mode) {
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    if (btn.dataset.theme === mode) {
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.background = 'var(--accent-bg)';
+      btn.style.color = 'var(--accent)';
+    } else {
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'var(--surface)';
+      btn.style.color = 'var(--text)';
+    }
+  });
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('edu-theme') || 'light';
+  applyTheme(saved);
+  setTimeout(() => updateThemeBtns(saved), 100);
+})();
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (localStorage.getItem('edu-theme') === 'system') applyTheme('system');
+});
+
+// ── CHANGE PASSWORD ──────────────────────────────────────────────
+async function changePassword() {
+  const current = document.getElementById('pw-current').value;
+  const newPw = document.getElementById('pw-new').value;
+  const confirm = document.getElementById('pw-confirm').value;
+  const alertEl = document.getElementById('pw-alert');
+
+  if (!current || !newPw || !confirm) {
+    return alertEl.innerHTML = `<div class="alert alert-error">All fields are required.</div>`;
+  }
+  if (newPw.length < 6) {
+    return alertEl.innerHTML = `<div class="alert alert-error">New password must be at least 6 characters.</div>`;
+  }
+  if (newPw !== confirm) {
+    return alertEl.innerHTML = `<div class="alert alert-error">New passwords don't match.</div>`;
+  }
+  try {
+    await api(`/change-password?current_password=${encodeURIComponent(current)}&new_password=${encodeURIComponent(newPw)}`, { method: 'PUT' });
+    closeModal('modal-change-pw');
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    alertEl.innerHTML = '';
+    toast('Password changed!');
+  } catch (e) {
+    alertEl.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+  }
+}
+
+async function logoutAll() {
+  if (!confirm('This will sign you out from all devices. Continue?')) return;
+  try {
+    await api('/logout-all', { method: 'POST' });
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    location.reload();
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────
+(async function boot() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+    try {
+      await api(`/verify?token=${encodeURIComponent(token)}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      switchTab('login');
+      authAlert('Email verified successfully! You can now sign in.', 'success');
+    } catch (e) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      switchTab('login');
+      authAlert('Verification failed or link expired.', 'error');
+    }
+  }
+  if (state.accessToken) {
+    document.getElementById('auth-screen').style.display = 'none';
+    await initApp();
+  }
 })();
 </script>
 </body>

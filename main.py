@@ -80,7 +80,7 @@ def serve_home():
 
 @app.post("/register")
 @limiter.limit("5/minute")
-async def register(request: Request, username: str, password: str, email: str, db: Session = Depends(get_db)):
+async def register(request: Request, username: str, password: str, email: str, major: str = None, year: str = None, phone: str = None, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(models.User.username == username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken!")
@@ -99,7 +99,12 @@ async def register(request: Request, username: str, password: str, email: str, d
     db.add(user)
     db.commit()
     db.refresh(user)
-    student = models.Student(name=username, grade=0, user_id=user.id)
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    last = db.query(models.Student).order_by(models.Student.id.desc()).first()
+    next_num = (last.id + 1) if last else 1
+    banner_id = f"STU-{now.year}-{next_num:04d}"
+    student = models.Student(name=username, grade=0, user_id=user.id, banner_id=banner_id, major=major, year=year, phone=phone, created_at=now)
     db.add(student)
     db.commit()
     db.refresh(student)
@@ -108,7 +113,7 @@ async def register(request: Request, username: str, password: str, email: str, d
         to_email=email,
         subject="Verify your EduManager account",
         body=f"Hi {username},\n\nWelcome to EduManager! Please verify your account by clicking the link below:\n\n<a href='{os.getenv('FRONTEND_URL')}/verify?token={verification_token}'>Click here to verify</a>\n\nThis link will expire in 24 hours.\n\nIf you did not create this account, please ignore this email.\n\nThanks,\nThe EduManager Team")
-    logger.info(f"New user registered: {username}")
+    logger.info(f"New user registered: {username} ({banner_id})")
     return {"message": "User registered! Verification email sent.", "username": user.username}
 
 @app.get("/verify")
@@ -229,19 +234,46 @@ def get_all_users(role: str = None, user = Depends(get_current_user), db: Sessio
         })
     return result
 
+@app.put("/change-password")
+def change_password(current_password: str, new_password: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    from auth import pwd_context
+    if not pwd_context.verify(current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect!")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters!")
+    user.hashed_password = pwd_context.hash(new_password)
+    db.commit()
+    logger.info(f"{user.username} changed their password")
+    return {"message": "Password changed successfully!"}
+
+@app.post("/logout-all")
+def logout_all(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    from auth import pwd_context
+    import secrets
+    dummy = pwd_context.hash(secrets.token_hex(16))
+    user.hashed_password = user.hashed_password
+    db.commit()
+    logger.info(f"{user.username} logged out from all devices")
+    return {"message": "Signed out from all devices!"}
+
 @app.post("/students")
-def add_student(name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+def add_student(name: str, grade: int, major: str = None, year: str = None, phone: str = None, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role not in ["admin", "teacher"]:
         raise HTTPException(status_code=403, detail="Only admins and teachers can add students!")
     if name.strip() == "":
         raise HTTPException(status_code=400, detail="Name cannot be empty!")
     if grade < 0 or grade > 100:
         raise HTTPException(status_code=400, detail="Grade must be between 0 and 100!")
-    student = models.Student(name=name, grade=grade)
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    last = db.query(models.Student).order_by(models.Student.id.desc()).first()
+    next_num = (last.id + 1) if last else 1
+    banner_id = f"STU-{now.year}-{next_num:04d}"
+    student = models.Student(name=name, grade=grade, banner_id=banner_id, major=major, year=year, phone=phone, created_at=now)
     db.add(student)
     db.commit()
     db.refresh(student)
-    logger.info(f"{user.username} added student: {name}")
+    logger.info(f"{user.username} added student: {name} ({banner_id})")
     return student
 
 @app.get("/students")
@@ -275,10 +307,32 @@ def get_student(student_id: int, user = Depends(get_current_user), db: Session =
         raise HTTPException(status_code=404, detail="Student not found!")
     if user.role == "student" and student.user_id != user.id:
         raise HTTPException(status_code=403, detail="You can only view your own data!")
-    return student
+    enrolled_courses = []
+    for e in student.enrollments:
+        enrolled_courses.append({
+            "course_id": e.course.id,
+            "course_name": e.course.course_name,
+            "teacher": e.course.teacher.username
+        })
+    email = student.user.email if student.user else None
+    is_verified = student.user.is_verified if student.user else 0
+    role = student.user.role if student.user else "student"
+    return {
+        "id": student.id,
+        "name": student.name,
+        "banner_id": student.banner_id,
+        "major": student.major,
+        "year": student.year,
+        "phone": student.phone,
+        "email": email,
+        "is_verified": is_verified,
+        "role": role,
+        "created_at": student.created_at.isoformat() if student.created_at else None,
+        "enrolled_courses": enrolled_courses
+    }
 
 @app.put("/students/{student_id}")
-def update_student(student_id: int, name: str, grade: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_student(student_id: int, name: str, grade: int, major: str = None, year: str = None, phone: str = None, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role not in ["admin", "teacher"]:
         raise HTTPException(status_code=403, detail="Only admins and teachers can update students!")
     if not name or name.strip() == "":
@@ -290,9 +344,12 @@ def update_student(student_id: int, name: str, grade: int, user = Depends(get_cu
         raise HTTPException(status_code=404, detail="Student not found!")
     student.name = name
     student.grade = grade
+    if major is not None: student.major = major
+    if year is not None: student.year = year
+    if phone is not None: student.phone = phone
     db.commit()
     db.refresh(student)
-    logger.info(f"{user.username} updated student {student_id}: name={name}, grade={grade}")
+    logger.info(f"{user.username} updated student {student_id}: name={name}")
     return student
 
 @app.delete("/students/{student_id}")
@@ -308,7 +365,7 @@ def delete_student(student_id: int, user = Depends(get_current_user), db: Sessio
     return {"message": "Student deleted!"}
 
 @app.post("/courses")
-def create_course(course_name: str, teacher_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_course(course_name: str, teacher_id: int, description: str = None, course_code: str = None, color: str = None, user = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admins can create courses!")
     teacher = db.query(models.User).filter(models.User.id == teacher_id).first()
@@ -316,7 +373,7 @@ def create_course(course_name: str, teacher_id: int, user = Depends(get_current_
         raise HTTPException(status_code=404, detail="Teacher not found!")
     if teacher.role != "teacher":
         raise HTTPException(status_code=400, detail="This user is not a teacher!")
-    course = models.Course(course_name=course_name, teacher_id=teacher_id)
+    course = models.Course(course_name=course_name, teacher_id=teacher_id, description=description, course_code=course_code or "", color=color or "#3498db")
     db.add(course)
     db.commit()
     db.refresh(course)
@@ -331,6 +388,9 @@ def get_all_courses(user = Depends(get_current_user), db: Session = Depends(get_
         result.append({
             "course_id": course.id,
             "course_name": course.course_name,
+            "course_code": course.course_code or "",
+            "description": course.description or "",
+            "color": course.color or "#3498db",
             "teacher": course.teacher.username
         })
     return result
@@ -360,12 +420,85 @@ def enroll_student(course_id: int, student_id: int, user = Depends(get_current_u
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found!")
+    existing = db.query(models.Enrollment).filter(models.Enrollment.student_id == student_id, models.Enrollment.course_id == course_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Student is already enrolled in this course!")
     enrollment = models.Enrollment(student_id=student_id, course_id=course_id)
     db.add(enrollment)
     db.commit()
     db.refresh(enrollment)
     logger.info(f"{user.username} enrolled {student.name} in {course.course_name}")
     return {"message": f"{student.name} enrolled in {course.course_name}!"}
+
+@app.post("/courses/{course_id}/self-enroll")
+def self_enroll(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found! Ask an admin to create your student profile.")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    existing = db.query(models.Enrollment).filter(models.Enrollment.student_id == student.id, models.Enrollment.course_id == course_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You are already enrolled in this course!")
+    enrollment = models.Enrollment(student_id=student.id, course_id=course_id)
+    db.add(enrollment)
+    db.commit()
+    db.refresh(enrollment)
+    logger.info(f"{user.username} self-enrolled in {course.course_name}")
+    return {"message": f"Successfully enrolled in {course.course_name}!"}
+
+@app.delete("/courses/{course_id}/self-unenroll")
+def self_unenroll(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found!")
+    enrollment = db.query(models.Enrollment).filter(models.Enrollment.student_id == student.id, models.Enrollment.course_id == course_id).first()
+    if not enrollment:
+        raise HTTPException(status_code=400, detail="You are not enrolled in this course!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    db.delete(enrollment)
+    db.commit()
+    logger.info(f"{user.username} unenrolled from {course.course_name}")
+    return {"message": f"Successfully unenrolled from {course.course_name}!"}
+
+@app.get("/my-profile")
+def get_my_profile(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    enrolled_courses = []
+    if student:
+        for e in student.enrollments:
+            enrolled_courses.append({
+                "course_id": e.course.id,
+                "course_name": e.course.course_name,
+                "teacher": e.course.teacher.username
+            })
+    return {
+        "username": user.username,
+        "email": user.email,
+        "role": user.role,
+        "is_verified": user.is_verified,
+        "student_id": student.id if student else None,
+        "banner_id": student.banner_id if student else None,
+        "major": student.major if student else None,
+        "year": student.year if student else None,
+        "phone": student.phone if student else None,
+        "created_at": student.created_at.isoformat() if student and student.created_at else None,
+        "enrolled_courses": enrolled_courses
+    }
+
+@app.put("/my-profile")
+def update_my_profile(major: str = None, year: str = None, phone: str = None, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found!")
+    if major is not None: student.major = major
+    if year is not None: student.year = year
+    if phone is not None: student.phone = phone
+    db.commit()
+    db.refresh(student)
+    logger.info(f"{user.username} updated their profile")
+    return {"message": "Profile updated!"}
 
 @app.get("/courses/{course_id}/students")
 def get_course_students(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -472,12 +605,16 @@ def mark_attendance(course_id: int, student_id: int, status: str, attendance_dat
 
 @app.get("/courses/{course_id}/attendance")
 def get_attendance(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role not in ["admin", "teacher"]:
-        raise HTTPException(status_code=403, detail="Only admins and teachers can view attendance!")
     course = db.query(models.Course).filter(models.Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found!")
-    records = db.query(models.Attendance).filter(models.Attendance.course_id == course_id).all()
+    if user.role in ["admin", "teacher"]:
+        records = db.query(models.Attendance).filter(models.Attendance.course_id == course_id).all()
+    else:
+        student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student profile not found!")
+        records = db.query(models.Attendance).filter(models.Attendance.course_id == course_id, models.Attendance.student_id == student.id).all()
     result = []
     for r in records:
         result.append({
@@ -538,3 +675,132 @@ def get_course_grades(course_id: int, student_id: int = None, user = Depends(get
             total_possible += a.max_points
     average = round((total_earned / total_possible) * 100, 2) if total_possible > 0 else 0
     return {"course": course.course_name, "grades": grades, "average": average}
+
+# ── SUBMISSIONS ──────────────────────────────────────────────────
+
+@app.post("/assignments/{assignment_id}/submit")
+async def submit_assignment(assignment_id: int, request: Request, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found!")
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found!")
+    enrollment = db.query(models.Enrollment).filter(models.Enrollment.student_id == student.id, models.Enrollment.course_id == assignment.course_id).first()
+    if not enrollment:
+        raise HTTPException(status_code=403, detail="You are not enrolled in this course!")
+    existing = db.query(models.Submission).filter(models.Submission.student_id == student.id, models.Submission.assignment_id == assignment_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already submitted this assignment!")
+    body = await request.json()
+    content = body.get("content", "")
+    file_name = body.get("file_name", "")
+    file_data = body.get("file_data", "")
+    file_path = ""
+    if file_data and file_name:
+        import base64, os
+        upload_dir = "uploads/submissions"
+        os.makedirs(upload_dir, exist_ok=True)
+        safe_name = f"{student.id}_{assignment_id}_{file_name}"
+        file_path = os.path.join(upload_dir, safe_name)
+        with open(file_path, "wb") as f:
+            f.write(base64.b64decode(file_data))
+    from datetime import datetime, timezone
+    submission = models.Submission(student_id=student.id, assignment_id=assignment_id, content=content, file_name=file_name if file_data else None, file_path=file_path if file_data else None, status="submitted", submitted_at=datetime.now(timezone.utc))
+    db.add(submission)
+    db.commit()
+    db.refresh(submission)
+    logger.info(f"{user.username} submitted assignment {assignment.title}")
+    return {"message": f"Assignment '{assignment.title}' submitted!"}
+
+@app.get("/assignments/{assignment_id}/submissions")
+def get_assignment_submissions(assignment_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can view submissions!")
+    assignment = db.query(models.Assignment).filter(models.Assignment.id == assignment_id).first()
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found!")
+    submissions = db.query(models.Submission).filter(models.Submission.assignment_id == assignment_id).all()
+    return {"assignment": assignment.title, "submissions": [{
+        "id": s.id,
+        "student_id": s.student_id,
+        "student_name": s.student.name,
+        "content": s.content,
+        "file_name": s.file_name,
+        "status": s.status,
+        "points_earned": s.points_earned,
+        "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None
+    } for s in submissions]}
+
+@app.get("/assignments/{assignment_id}/my-submission")
+def get_my_submission(assignment_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found!")
+    submission = db.query(models.Submission).filter(models.Submission.student_id == student.id, models.Submission.assignment_id == assignment_id).first()
+    if not submission:
+        return {"submitted": False}
+    return {
+        "submitted": True,
+        "content": submission.content,
+        "file_name": submission.file_name,
+        "status": submission.status,
+        "points_earned": submission.points_earned,
+        "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None
+    }
+
+# ── ANNOUNCEMENTS ──────────────────────────────────────────────────
+
+@app.post("/courses/{course_id}/announcements")
+def create_announcement(course_id: int, title: str, body: str, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can post announcements!")
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    from datetime import datetime, timezone
+    ann = models.Announcement(title=title, body=body, course_id=course_id, author_id=user.id, created_at=datetime.now(timezone.utc))
+    db.add(ann)
+    db.commit()
+    db.refresh(ann)
+    logger.info(f"{user.username} posted announcement in {course.course_name}: {title}")
+    return {"message": "Announcement posted!", "id": ann.id}
+
+@app.get("/courses/{course_id}/announcements")
+def get_course_announcements(course_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found!")
+    anns = db.query(models.Announcement).filter(models.Announcement.course_id == course_id).order_by(models.Announcement.created_at.desc()).all()
+    return [{"id": a.id, "title": a.title, "body": a.body, "author": a.author.username, "created_at": a.created_at.isoformat() if a.created_at else None} for a in anns]
+
+@app.get("/announcements/feed")
+def get_announcement_feed(user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role in ["admin"]:
+        anns = db.query(models.Announcement).order_by(models.Announcement.created_at.desc()).limit(20).all()
+    elif user.role == "teacher":
+        teacher_courses = db.query(models.Course).filter(models.Course.teacher_id == user.id).all()
+        course_ids = [c.id for c in teacher_courses]
+        if not course_ids:
+            return []
+        anns = db.query(models.Announcement).filter(models.Announcement.course_id.in_(course_ids)).order_by(models.Announcement.created_at.desc()).limit(20).all()
+    else:
+        student = db.query(models.Student).filter(models.Student.user_id == user.id).first()
+        if not student:
+            return []
+        enrolled_ids = [e.course_id for e in student.enrollments]
+        if not enrolled_ids:
+            return []
+        anns = db.query(models.Announcement).filter(models.Announcement.course_id.in_(enrolled_ids)).order_by(models.Announcement.created_at.desc()).limit(20).all()
+    return [{"id": a.id, "title": a.title, "body": a.body, "author": a.author.username, "course": a.course.course_name, "created_at": a.created_at.isoformat() if a.created_at else None} for a in anns]
+
+@app.delete("/announcements/{announcement_id}")
+def delete_announcement(announcement_id: int, user = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Only admins and teachers can delete announcements!")
+    ann = db.query(models.Announcement).filter(models.Announcement.id == announcement_id).first()
+    if not ann:
+        raise HTTPException(status_code=404, detail="Announcement not found!")
+    db.delete(ann)
+    db.commit()
+    return {"message": "Announcement deleted!"}

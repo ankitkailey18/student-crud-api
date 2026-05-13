@@ -1,13 +1,18 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, DateTime, Text
 from sqlalchemy.orm import relationship
 from database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Student(Base):
     __tablename__ = "students"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     grade = Column(Integer)
+    banner_id = Column(String, unique=True, nullable=True)
+    major = Column(String, nullable=True)
+    year = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     enrollments = relationship("Enrollment", back_populates="student")
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="student_profile")
@@ -19,12 +24,14 @@ class Course(Base):
     id = Column(Integer, primary_key=True, index=True)
     course_name = Column(String)
     course_code = Column(String, default="")
+    description = Column(Text, nullable=True)
     color = Column(String, default="#3498db")
     teacher_id = Column(Integer, ForeignKey("users.id"))
     teacher = relationship("User", back_populates="courses_teaching")
     enrollments = relationship("Enrollment", back_populates="course")
     assignments = relationship("Assignment", back_populates="course")
     attendance_records = relationship("Attendance", back_populates="course")
+    announcements = relationship("Announcement", back_populates="course")
 
 class User(Base):
     __tablename__ = "users"
@@ -66,8 +73,12 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"))
     assignment_id = Column(Integer, ForeignKey("assignments.id"))
-    points_earned = Column(Float)
-    submitted_at = Column(DateTime, default=datetime.utcnow)
+    content = Column(Text, nullable=True)
+    file_name = Column(String, nullable=True)
+    file_path = Column(String, nullable=True)
+    status = Column(String, default="submitted")
+    points_earned = Column(Float, nullable=True)
+    submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     student = relationship("Student", back_populates="submissions")
     assignment = relationship("Assignment", back_populates="submissions")
 
@@ -80,3 +91,14 @@ class Attendance(Base):
     status = Column(String, default="present")
     student = relationship("Student", back_populates="attendance_records")
     course = relationship("Course", back_populates="attendance_records")
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    body = Column(Text)
+    course_id = Column(Integer, ForeignKey("courses.id"))
+    author_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    course = relationship("Course", back_populates="announcements")
+    author = relationship("User")
